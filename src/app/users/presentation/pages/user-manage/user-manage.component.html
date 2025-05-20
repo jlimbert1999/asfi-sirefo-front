@@ -1,0 +1,68 @@
+<div class="flex items-center justify-between">
+  <span class="font-medium text-2xl">Usuarios</span>
+  <div class="flex gap-x-4">
+    <p-button label="Agregar" icon="pi pi-plus" (onClick)="create()" />
+  </div>
+</div>
+
+<div class="mt-4">
+  <p-table [value]="datasource()" [tableStyle]="{ 'min-width': '50rem' }">
+    <ng-template #caption>
+      <div class="flex justify-end">
+        <search-input placeholder="Buscar" (onSearch)="search($event)" />
+      </div>
+    </ng-template>
+    <ng-template #header>
+      <tr>
+        <th>Login</th>
+        <th>Nombre</th>
+        <th>Cargo</th>
+        <th>Creacion</th>
+        <th>Estado</th>
+        <th style="width: 4rem"></th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-item>
+      <tr>
+        <td>{{ item.login }}</td>
+        <td>{{ item.fullName | titlecase }}</td>
+        <td>{{ item.position }}</td>
+        <td>{{ item.createdAt | date : "short" }}</td>
+        <td>
+          @if(item.active){
+          <p-tag severity="success" value="Habilitado" />
+          } @else {
+          <p-tag severity="danger" value="Deshabilitado" />
+          }
+        </td>
+        <td>
+          <p-button
+            icon="pi pi-pencil"
+            [rounded]="true"
+            [text]="true"
+            (onClick)="update(item)"
+          />
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr>
+        <td [colSpan]="6">Sin registros</td>
+      </tr>
+    </ng-template>
+  </p-table>
+  @if (datasize() > limit()){
+  <div class="flex justify-end">
+    <p-paginator
+      [rows]="limit()"
+      [first]="offset()"
+      (onPageChange)="onPageChange($event)"
+      [totalRecords]="datasize()"
+      [showCurrentPageReport]="true"
+      [showPageLinks]="false"
+      [showJumpToPageDropdown]="false"
+      currentPageReportTemplate="{first} - {last} de {totalRecords} Registros"
+    ></p-paginator>
+  </div>
+  }
+</div>

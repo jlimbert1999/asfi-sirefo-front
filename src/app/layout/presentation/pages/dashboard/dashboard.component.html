@@ -1,0 +1,14 @@
+<div class="layout-wrapper" [ngClass]="containerClass">
+  <app-toolbar />
+  <app-sidebar [menu]="menu" />
+  <div class="layout-main-container">
+    <div class="layout-main relative">
+      @if(isLoading()){
+      <div class="absolute inset-0 flex items-center justify-center bg-white/30 backdrop-blur-xs z-50">
+        <p-progress-spinner strokeWidth="4" animationDuration=".5s" [style]="{ width: '100px', height: '100px' }" />
+      </div>
+      }
+      <router-outlet/>
+    </div>
+  </div>
+</div>

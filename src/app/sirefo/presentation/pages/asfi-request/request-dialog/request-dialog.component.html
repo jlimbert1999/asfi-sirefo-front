@@ -1,0 +1,234 @@
+<div class="p-dialog-content">
+  <p-stepper [value]="1">
+    <p-step-list>
+      <p-step [value]="1">Detalle Solicitud</p-step>
+      <p-step [value]="2">Personas Afectadas</p-step>
+    </p-step-list>
+    <p-step-panels>
+      <p-step-panel [value]="1">
+        <ng-template #content let-activateCallback="activateCallback">
+          <form [formGroup]="form">
+            <div class="grid grid-cols-4 gap-y-8 gap-x-4">
+              <div class="col-span-2">
+                <p-floatlabel>
+                  <input
+                    pInputText
+                    formControlName="requestingAuthority"
+                    class="w-full"
+                  />
+                  <label>Nombre Autoridad Solicitante</label>
+                </p-floatlabel>
+              </div>
+              <div class="col-span-2">
+                <p-floatlabel>
+                  <input
+                    pInputText
+                    formControlName="authorityPosition"
+                    class="w-full"
+                  />
+                  <label>Cargo Autoridad Solicitante</label>
+                </p-floatlabel>
+              </div>
+              <div class="sm:col-span-2">
+                <p-floatlabel>
+                  <input
+                    pInputText
+                    formControlName="requestCode"
+                    class="w-full"
+                  />
+                  <label>Codigo Solicitud (CITE)</label>
+                </p-floatlabel>
+              </div>
+              <div>
+                <p-select
+                  [options]="PROCESS_TYPES"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Tipo proceso"
+                  class="w-full"
+                  formControlName="processType"
+                />
+              </div>
+              <div>
+                <p-floatlabel>
+                  <input
+                    pInputText
+                    formControlName="department"
+                    class="w-full"
+                  />
+                  <label>Gerencia Solicitante</label>
+                </p-floatlabel>
+              </div>
+
+              <div class="col-span-4">
+                <div class="flex flex-col sm:flex-row items-center gap-4">
+                  <p-fileupload
+                    mode="basic"
+                    chooseIcon="pi pi-upload"
+                    accept=".pdf"
+                    (onSelect)="onFileSelect($event)"
+                    [auto]="true"
+                    chooseLabel="Seleccionar"
+                  />
+                  <div>
+                    @if(selectedFileName()){
+                      <div class="px-3 py-2 rounded-md bg-green-50 ring-1 ring-green-500 text-black">
+                        <i class="pi pi-file-pdf"></i>
+                        <span class="ml-2">{{ selectedFileName()}}</span> 
+                      </div>
+                    } @else {
+                      <span>Nota de solicitud dirigida a ASFI - (PDF)</span>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+          <div class="flex py-4 justify-end">
+            <p-button
+              icon="pi pi-arrow-right"
+              label="Siguiente"
+              iconPos="right"
+              size="small"
+              severity="secondary"
+              (onClick)="activateCallback(2)"
+            />
+          </div>
+        </ng-template>
+      </p-step-panel>
+
+      <p-step-panel [value]="2">
+        <ng-template #content let-activateCallback="activateCallback">
+          <p-toolbar class="p-0 m-0">
+            <ng-template #start>
+              <p-button
+                severity="danger"
+                label="Remover"
+                icon="pi pi-trash"
+                outlined
+                [disabled]="datasource().length === 0"
+                (onClick)="datasource.set([])"
+              />
+            </ng-template>
+
+            <ng-template #end>
+              <div class="flex gap-x-2">
+                <a
+                  severity="secondary"
+                  class="p-button"
+                  href="files/formato-cabeceras.xlsx"
+                >
+                  <i class="pi pi-arrow-down"></i>
+                </a>
+                <p-fileUpload
+                  mode="basic"
+                  accept=".xlsx,.ods"
+                  chooseLabel="Importar"
+                  auto
+                  customUpload
+                  class="mr-2 inline-block"
+                  [chooseButtonProps]="{ severity: 'secondary' }"
+                  (onSelect)="loadExcel($event)"
+                />
+              </div>
+            </ng-template>
+          </p-toolbar>
+
+          @if(datasource().length > 0){
+          <p-table
+            #dt
+            [value]="datasource()"
+            [rows]="10"
+            [paginator]="true"
+            [showCurrentPageReport]="true"
+            [tableStyle]="{ 'min-width': '75rem' }"
+            currentPageReportTemplate="{first} - {last} de {totalRecords} Registros"
+            [alwaysShowPaginator]="datasource().length > 5"
+            paginatorDropdownAppendTo="body"
+            [globalFilterFields]="[
+              'documentNumber',
+              'firstName',
+              'paternalLastName',
+              'maternalLastName'
+            ]"
+          >
+            <ng-template #caption>
+              <div class="flex justify-end">
+                <p-iconField iconPosition="left">
+                  <p-inputIcon>
+                    <i class="pi pi-search"></i>
+                  </p-inputIcon>
+                  <input
+                    pInputText
+                    type="text"
+                    (input)="onGlobalFilterTable(dt, $event)"
+                    placeholder="Nombres / Nro. Documento"
+                  />
+                </p-iconField>
+              </div>
+            </ng-template>
+            <ng-template #header>
+              <tr>
+                @for (column of COLUMNS; track $index) {
+                <th [style.min-width]="column.width ?? '15rem'">
+                  <div class="flex items-center">{{ column.header }}</div>
+                </th>
+                }
+              </tr>
+            </ng-template>
+            <ng-template #body let-item>
+              <tr>
+                @for (column of COLUMNS; track $index) {
+                <td>{{ item[column.columnDef] }}</td>
+                }
+              </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+              <tr>
+                <td [colSpan]="COLUMNS.length">Sin registros</td>
+              </tr>
+            </ng-template>
+          </p-table>
+          } @else {
+          <div class="px-4 py-6 font-medium text-lg">
+            No hay personas registradas en la solicitud
+          </div>
+          }
+          <div class="flex py-4 justify-between">
+            <p-button
+              label="Atras"
+              severity="secondary"
+              size="small"
+              icon="pi pi-arrow-left"
+              (onClick)="activateCallback(1)"
+            />
+          </div>
+        </ng-template>
+      </p-step-panel>
+    </p-step-panels>
+  </p-stepper>
+</div>
+<div class="p-dialog-footer">
+  <p-button
+    label="Cancelar"
+    severity="danger"
+    variant="outlined"
+    (onClick)="close()"
+  />
+  <p-button label="Guardar" [disabled]="!isFormValid" (onClick)="save()" />
+</div>
+
+@if(isErrorDialogShowing()){
+<p-dialog
+  header="Errores Formato"
+  [modal]="true"
+  [draggable]="false"
+  [(visible)]="isErrorDialogShowing"
+  [style]="{ width: '40rem' }"
+  [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }"
+>
+  @for (message of errorMessages(); track $index) {
+  <p>{{ message }}</p>
+  }
+</p-dialog>
+}

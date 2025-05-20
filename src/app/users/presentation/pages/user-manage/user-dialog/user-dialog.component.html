@@ -1,0 +1,73 @@
+<div class="p-dialog-content">
+  <form [formGroup]="formUser" class="mt-5">
+    <div class="grid grid-cols-2 gap-y-8 gap-x-4">
+      <div class="col-span-2">
+        <p-floatlabel>
+          <input
+            pInputText
+            autocomplete="off"
+            class="w-full"
+            formControlName="fullName"
+          />
+          <label>Nombre completo</label>
+        </p-floatlabel>
+      </div>
+      <div class="col-span-2">
+        <p-floatlabel>
+          <input pInputText formControlName="position" class="w-full" />
+          <label>Cargo asignado</label>
+        </p-floatlabel>
+      </div>
+      <div>
+        <p-floatlabel>
+          <input
+            pInputText
+            formControlName="login"
+            autocomplete="off"
+            class="w-full"
+          />
+          <label>Usuario</label>
+        </p-floatlabel>
+      </div>
+      <div>
+        <p-floatlabel class="w-full">
+          <p-password
+            formControlName="password"
+            [feedback]="false"
+            [toggleMask]="true"
+            autocomplete="false"
+            inputStyleClass="w-full"
+            styleClass="w-full"
+          />
+          <label>Contraseña</label>
+        </p-floatlabel>
+      </div>
+      <div>
+        <p-multiSelect
+          [filter]="false"
+          filterPlaceHolder="Buscar rol"
+          styleClass="w-full"
+          appendTo="body"
+          [options]="roles"
+          formControlName="roles"
+          placeholder="Seleccione los roles"
+        />
+      </div>
+      <div>
+        <p-checkbox #stateCheck [binary]="true" formControlName="active" />
+        <label for="ny" class="ml-2">
+          {{ stateCheck.checked ? "Habilitado" : "Deshabilitado" }}
+        </label>
+      </div>
+    </div>
+  </form>
+</div>
+<div class="p-dialog-footer">
+  <p-button
+    label="Cancelar"
+    severity="danger"
+    variant="outlined"
+    (onClick)="close()"
+  />
+  <p-button label="Guardar" (onClick)="save()" />
+</div>
