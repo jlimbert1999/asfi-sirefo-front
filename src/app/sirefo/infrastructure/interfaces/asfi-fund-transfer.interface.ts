@@ -14,6 +14,7 @@ export interface IAsfiFundTransfer {
   status: string;
   asfiRequest: asfiRequest;
   file: file;
+  dataSheetFile: string;
 }
 
 interface asfiRequest {

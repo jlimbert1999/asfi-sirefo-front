@@ -17,20 +17,25 @@ import { DialogService, DynamicDialogModule } from 'primeng/dynamicdialog';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { Popover, PopoverModule } from 'primeng/popover';
+import { DatePickerModule } from 'primeng/datepicker';
 import { ToolbarModule } from 'primeng/toolbar';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { MenuModule } from 'primeng/menu';
 import { TagModule } from 'primeng/tag';
 import { MenuItem } from 'primeng/api';
 
 import { AsfiFundTransferDialogComponent } from './asfi-fund-transfer-dialog/asfi-fund-transfer-dialog.component';
-import { SearchInputComponent } from '../../../../shared';
+import {
+  FieldValidationErrorMessages,
+  SearchInputComponent,
+} from '../../../../shared';
 import { AsfiFundTransferService, FileUploadService } from '../../services';
 import { AsfiFundTransfer } from '../../../domain';
-import { SelectModule } from 'primeng/select';
-import { DatePickerModule } from 'primeng/datepicker';
+
+import { AsfiNoteDisplayComponent } from '../../components';
 
 @Component({
   selector: 'app-asfi-fund-tranfer',
@@ -52,6 +57,7 @@ import { DatePickerModule } from 'primeng/datepicker';
     SelectModule,
     DatePickerModule,
     SearchInputComponent,
+    AsfiNoteDisplayComponent,
   ],
   templateUrl: './asfi-fund-tranfer.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -73,9 +79,19 @@ export default class AsfiFundTranferComponent implements OnInit {
   term = signal<string>('');
 
   isShowingFile = signal(false);
-  currentFileUrl = signal<string>('');
+  selectedItem = signal<AsfiFundTransfer | null>(null);
 
   menuOptions = signal<MenuItem[]>([]);
+
+  protected formMessages: FieldValidationErrorMessages = {
+    requestingAuthority: {
+      pattern: 'Solo letras, espacios y guiones, sin caracteres especiales',
+      minWords: 'Se requieren al menos 2 palabras',
+    },
+    authorityPosition: {
+      pattern: 'Solo letras, espacios y guiones, sin caracteres especiales',
+    },
+  };
 
   filterForm: FormGroup = this.formBuilder.group({
     createdAt: [''],
@@ -159,13 +175,9 @@ export default class AsfiFundTranferComponent implements OnInit {
     });
   }
 
-  showFile(item: any) {
-    this.fileService.getFile(item.file.fileName).subscribe((file) => {
-      const blob = new Blob([file], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      this.currentFileUrl.set(url);
-      this.isShowingFile.set(true);
-    });
+  showFile(item: AsfiFundTransfer) {
+    this.selectedItem.set(item);
+    this.isShowingFile.set(true);
   }
 
   onShowOptionsMenu(request: any): void {
@@ -212,11 +224,7 @@ export default class AsfiFundTranferComponent implements OnInit {
     this.filter();
   }
 
-  closeFileDialog() {
-    URL.revokeObjectURL(this.currentFileUrl());
-    this.currentFileUrl.set('');
-    this.isShowingFile.set(false);
-  }
+
 
   get isFilterFormValid() {
     return Object.values(this.filterForm.value).some((value) => value !== null);

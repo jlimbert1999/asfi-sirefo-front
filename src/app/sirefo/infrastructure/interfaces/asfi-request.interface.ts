@@ -13,6 +13,7 @@ export interface IAsfiRequest {
   status: string;
   file: file;
   circularNumber: string | null;
+  dataSheetFile: string;
 }
 
 interface file {

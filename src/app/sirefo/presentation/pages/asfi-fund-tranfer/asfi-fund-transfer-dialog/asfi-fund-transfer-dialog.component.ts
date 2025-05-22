@@ -6,9 +6,9 @@ import {
   signal,
 } from '@angular/core';
 import {
+  ReactiveFormsModule,
   FormBuilder,
   FormsModule,
-  ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -19,33 +19,42 @@ import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
-import { Table, TableModule } from 'primeng/table';
-import { FloatLabel } from 'primeng/floatlabel';
 import { MessageModule } from 'primeng/message';
 import { ToolbarModule } from 'primeng/toolbar';
 import { StepperModule } from 'primeng/stepper';
+import { FloatLabel } from 'primeng/floatlabel';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
-import { Select, SelectModule } from 'primeng/select';
+import { SelectModule } from 'primeng/select';
+import { MessageService } from 'primeng/api';
+import { TableModule } from 'primeng/table';
 
-import { map, Observable, of, switchMap } from 'rxjs';
+import { catchError, forkJoin, of, switchMap } from 'rxjs';
 
 import {
+  ExcelService,
+  FileUploadService,
   AsfiFundTransferService,
   AsfiRequestService,
-  FileUploadService,
-  ExcelService,
 } from '../../../services';
+
 import {
   aprovedRequest,
-  asfiFundTransferDetail,
+  asfiFundTransferItem,
 } from '../../../../infrastructure';
-import { MessageService } from '../../../../../shared';
+
+import {
+  AlertService,
+  FieldValidationErrorMessages,
+} from '../../../../../shared';
 import { AsfiFundTransfer } from '../../../../domain';
+import { FormErrorMessagesPipe } from '../../../../../shared';
+import { CustomFormValidators } from '../../../../../helpers';
+import { AuthService } from '../../../../../auth/presentation/services/auth.service';
 
 interface column {
   header: string;
-  columnDef: keyof asfiFundTransferDetail;
+  columnDef: keyof asfiFundTransferItem;
   width?: string;
 }
 
@@ -72,6 +81,7 @@ interface selectOption<T> {
     ToolbarModule,
     DialogModule,
     MessageModule,
+    FormErrorMessagesPipe,
   ],
   templateUrl: './asfi-fund-transfer-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -79,12 +89,14 @@ interface selectOption<T> {
 export class AsfiFundTransferDialogComponent implements OnInit {
   private formBuilder = inject(FormBuilder);
   private dialogRef = inject(DynamicDialogRef);
+  private messageService = inject(MessageService);
 
   private excelService = inject(ExcelService);
-  private messageService = inject(MessageService);
+  private alertService = inject(AlertService);
   private fileUploadService = inject(FileUploadService);
   private requestService = inject(AsfiFundTransferService);
   private asfiRequestService = inject(AsfiRequestService);
+  private user = inject(AuthService).user();
 
   readonly COLUMNS: column[] = [
     { header: 'Item', columnDef: 'item', width: '40px' },
@@ -104,30 +116,55 @@ export class AsfiFundTransferDialogComponent implements OnInit {
     { header: 'Codigo Envio', columnDef: 'transferCode' },
   ];
 
+  protected formMessages: FieldValidationErrorMessages = {
+    requestingAuthority: {
+      pattern: 'Solo letras, espacios y guiones, sin caracteres especiales',
+      minWords: 'Se requieren al menos 2 palabras',
+    },
+    authorityPosition: {
+      pattern: 'Solo letras, espacios y guiones, sin caracteres especiales',
+    },
+  };
+
   data: AsfiFundTransfer | undefined = inject(DynamicDialogConfig).data;
 
-  datasource = signal<asfiFundTransferDetail[]>([]);
+  datasource = signal<asfiFundTransferItem[]>([]);
 
   form = this.formBuilder.group({
-    authorityPosition: ['', Validators.required],
-    requestingAuthority: ['', Validators.required],
+    requestingAuthority: [
+      this.user?.fullName,
+      [
+        Validators.required,
+        Validators.minLength(5),
+        Validators.pattern(/^[A-Za-zÁÉÍÓÚÑáéíóúñ' -]+$/),
+        CustomFormValidators.minWordsValidator(2),
+      ],
+    ],
+    authorityPosition: [
+      this.user?.position,
+      [
+        Validators.required,
+        Validators.minLength(4),
+        Validators.pattern(/^[A-Za-zÁÉÍÓÚÑáéíóúñ.\- ]+$/),
+      ],
+    ],
+
     requestCode: ['', Validators.required],
     department: ['', Validators.required],
   });
 
-  selectedFile = signal<File | null>(null);
-  selectedFileName = signal<string | null>(null);
+  pdfFile = signal<File | null>(null);
+  pdfFileName = signal<string | null>(null);
   selectedAsfiRequest = signal<aprovedRequest | null>(null);
+  spreadsheetFile = signal<File | null>(null);
 
   isErrorDialogShowing = signal(false);
   errorMessages = signal<string[]>([]);
-
   aprovedRequests = signal<selectOption<aprovedRequest>[]>([]);
-
-  constructor() {}
 
   ngOnInit(): void {
     this.loadFormData();
+    this.getAprovedCodes();
   }
 
   save() {
@@ -145,55 +182,63 @@ export class AsfiFundTransferDialogComponent implements OnInit {
     });
   }
 
-  onGlobalFilterTable(table: Table, event: Event) {
-    table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
+  onPdfSelect(event: FileSelectEvent) {
+    const [file] = event.files;
+    this.pdfFile.set(file);
+    this.pdfFileName.set(file.name);
   }
 
-  onFileSelect(event: FileSelectEvent) {
+  onSpreadSheetSelect(event: FileSelectEvent) {
     const [file] = event.files;
-    this.selectedFile.set(file);
+    if (!file) return;
+    this.spreadsheetFile.set(file);
+    const colums = this.COLUMNS.map(({ header }) => header);
+    this.excelService.readExcelFile(file, colums).subscribe({
+      next: (data) => {
+        this.datasource.set(this.excelDataToDto(data));
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Formato incorrecto',
+          detail: 'No se puedo cargar el archivo',
+        });
+      },
+    });
   }
 
   close() {
     this.dialogRef.close();
   }
 
-  searchAprovedCodes(term: string) {
-    if (!term) return;
-    this.asfiRequestService
-      .searchAprovedCodes(term)
-      .pipe(
-        map((resp) =>
-          resp.map((item) => ({
-            label: `Nro. CITE: ${item.requestCode} / Circular: ${item.circularNumber}`,
-            value: item,
-          }))
-        )
-      )
-      .subscribe((data) => {
-        this.aprovedRequests.set(data);
-      });
+  getAprovedCodes() {
+    this.asfiRequestService.searchAprovedCodes().subscribe((data) => {
+      this.aprovedRequests.set(
+        data.map((item) => ({
+          label: `Nro. CITE: ${item.requestCode} / Circular: ${item.circularNumber}`,
+          value: item,
+        }))
+      );
+    });
   }
 
-  onSelectAsfiRequest(item: aprovedRequest, ref: Select) {
-    ref.clear();
+  onSelectAsfiRequest(item: aprovedRequest) {
     this.selectedAsfiRequest.set(item);
-  }
-
-  async loadExcel(event: FileSelectEvent) {
-    const [file] = event.files;
-    if (!file) return;
-    const data = await this.excelService.readExcelFile(file);
-    this.datasource.set(this.excelDataToDto(data));
   }
 
   get isFormValid() {
     return this.data
-      ? this.form.valid && this.datasource().length > 0
-      : this.form.valid && this.datasource().length > 0 && this.selectedFile();
+      ? this.form.valid &&
+          this.datasource().length > 0 &&
+          this.selectedAsfiRequest()
+      : this.form.valid &&
+          this.datasource().length > 0 &&
+          this.selectedAsfiRequest() &&
+          this.pdfFile() &&
+          this.spreadsheetFile();
   }
 
-  private excelDataToDto(data: any[]): asfiFundTransferDetail[] {
+  private excelDataToDto(data: any[]): asfiFundTransferItem[] {
     return data.map((el) => ({
       item: el.Item,
       maternalLastName: el['Apellido Materno'],
@@ -218,7 +263,7 @@ export class AsfiFundTransferDialogComponent implements OnInit {
     switch (error.status) {
       case 409:
         const request = error.error['request'];
-        this.messageService.message({
+        this.alertService.message({
           header: 'Error al registrar la solicitud',
           description:
             typeof message === 'string' ? message : 'La solicitud es invalida',
@@ -249,42 +294,48 @@ export class AsfiFundTransferDialogComponent implements OnInit {
 
   private loadFormData() {
     if (!this.data) return;
-    const { asfiRequest, file, ...props } = this.data;
+
+    const { file, dataSheetFile, asfiRequest, ...props } = this.data;
+
     this.form.patchValue(props);
     this.selectedAsfiRequest.set(asfiRequest);
-    this.selectedFileName.set(file.originalName);
+    this.pdfFileName.set(file.originalName);
+
+    this.fileUploadService
+      .getFile(dataSheetFile)
+      .pipe(
+        switchMap((file) => this.excelService.readExcelFile(file)),
+        catchError(() => of([]))
+      )
+      .subscribe((data) => {
+        this.datasource.set(this.excelDataToDto(data));
+      });
   }
 
   private buildSaveMethod() {
-    const file = this.selectedFile();
-
-    const upload$: Observable<{
-      originalName: string;
-      fileName: string;
-    } | null> = file ? this.fileUploadService.uploadAsfiNote(file) : of(null);
-
-    return upload$.pipe(
-      switchMap((uploadedFile) => {
-        const payload = {
-          form: {
-            ...this.form.value,
-            asfiRequestId: this.selectedAsfiRequest()?.id,
-          },
-          details: this.datasource(),
-
-          ...(uploadedFile && { file: uploadedFile }),
+    return forkJoin([
+      this.pdfFile()
+        ? this.fileUploadService.uploadAsfiFile(this.pdfFile()!)
+        : of(null),
+      this.spreadsheetFile()
+        ? this.fileUploadService.uploadAsfiFile(this.spreadsheetFile()!)
+        : of(null),
+    ]).pipe(
+      switchMap(([file, dataSheetFile]) => {
+        const formData = {
+          ...this.form.value,
+          ...(file && { file }),
+          ...(dataSheetFile && { dataSheetFile: dataSheetFile.fileName }),
+          asfiRequestId: this.selectedAsfiRequest()?.id,
         };
 
         return this.data
-          ? this.requestService.update({
-              id: this.data.id,
-              ...payload,
-            })
-          : this.requestService.create(
-              payload.form,
-              payload.details,
-              uploadedFile!
-            );
+          ? this.requestService.update(
+              this.data.id,
+              formData,
+              this.datasource()
+            )
+          : this.requestService.create(formData, this.datasource());
       })
     );
   }

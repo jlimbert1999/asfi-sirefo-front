@@ -14,6 +14,7 @@ interface asfiFundTransferProps {
   status: string;
   asfiRequest: asfiRequestProps;
   file: fileProps;
+  dataSheetFile: string;
 }
 interface asfiRequestProps {
   id: string;
@@ -43,6 +44,7 @@ export class AsfiFundTransfer {
   status: string;
   asfiRequest: asfiRequestProps;
   file: fileProps;
+  dataSheetFile: string;
 
   constructor({
     id,
@@ -60,6 +62,7 @@ export class AsfiFundTransfer {
     status,
     asfiRequest,
     file,
+    dataSheetFile,
   }: asfiFundTransferProps) {
     this.id = id;
     this.authorityPosition = authorityPosition;
@@ -76,5 +79,6 @@ export class AsfiFundTransfer {
     this.status = status;
     this.asfiRequest = asfiRequest;
     this.file = file;
+    this.dataSheetFile = dataSheetFile;
   }
 }

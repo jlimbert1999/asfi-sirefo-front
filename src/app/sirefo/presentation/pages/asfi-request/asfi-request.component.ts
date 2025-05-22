@@ -29,12 +29,9 @@ import { PdfViewerModule } from 'ng2-pdf-viewer';
 
 import { RequestDetailDialogComponent } from './request-detail-dialog/request-detail-dialog.component';
 import { RequestDialogComponent } from './request-dialog/request-dialog.component';
+import { AsfiRequestService, FileUploadService } from '../../services';
+import { AsfiNoteDisplayComponent } from '../../components';
 import { SearchInputComponent } from '../../../../shared';
-import {
-  AsfiRequestService,
-  FileUploadService,
-  RetentionService,
-} from '../../services';
 import { AsfiRequest } from '../../../domain';
 
 @Component({
@@ -57,6 +54,7 @@ import { AsfiRequest } from '../../../domain';
     PopoverModule,
     SelectModule,
     SearchInputComponent,
+    AsfiNoteDisplayComponent,
   ],
   templateUrl: './asfi-request.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -77,7 +75,7 @@ export default class AsfiRequestComponent implements OnInit {
   term = signal<string>('');
 
   isShowingFile = signal(false);
-  currentFileUrl = signal<string>('');
+  selectedItem = signal<AsfiRequest | null>(null);
 
   menuOptions = signal<MenuItem[]>([]);
 
@@ -190,12 +188,8 @@ export default class AsfiRequestComponent implements OnInit {
   }
 
   showFile(item: AsfiRequest) {
-    this.fileService.getFile(item.file.fileName).subscribe((file) => {
-      const blob = new Blob([file], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      this.currentFileUrl.set(url);
-      this.isShowingFile.set(true);
-    });
+    this.selectedItem.set(item);
+    this.isShowingFile.set(true);
   }
 
   onShowOptionsMenu(request: AsfiRequest): void {
@@ -218,14 +212,13 @@ export default class AsfiRequestComponent implements OnInit {
               this.showDetail(request);
             },
           },
-          // {
-          //   icon: 'pi pi-building-columns',
-          //   label: 'Solicitar remision de fondos',
-          //   disabled: !request.circularNumber,
-          //   command: () => {
-          //     this.openAsfiFundTransferDialog(request);
-          //   },
-          // },
+          {
+            icon: 'pi pi-download',
+            label: 'Descargar datos',
+            command: () => {
+              this.downloadFile(request);
+            },
+          },
         ],
       },
     ]);
@@ -249,9 +242,9 @@ export default class AsfiRequestComponent implements OnInit {
       });
   }
 
-  closeFileDialog() {
-    URL.revokeObjectURL(this.currentFileUrl());
-    this.currentFileUrl.set('');
-    this.isShowingFile.set(false);
+  private downloadFile(item: AsfiRequest) {
+    const fileExtension = item.dataSheetFile.split('.').pop();
+    const fileName = `SOLICITUD_${item.requestCode}.${fileExtension}`;
+    this.fileService.downloadFileFromUrl(item.dataSheetFile, fileName);
   }
 }

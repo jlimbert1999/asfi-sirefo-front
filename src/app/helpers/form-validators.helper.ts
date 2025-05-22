@@ -1,4 +1,4 @@
-import { AbstractControl, ValidatorFn } from '@angular/forms';
+import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
 export class CustomFormValidators {
   static matchFields(field: string, confirmField: string): ValidatorFn | null {
@@ -17,6 +17,16 @@ export class CustomFormValidators {
         control2?.setErrors(currentErrors);
       }
       return null;
+    };
+  }
+
+  static minWordsValidator(minWords: number) {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const value = control.value || '';
+      const wordCount = value.trim().split(/\s+/).length;
+      return wordCount >= minWords
+        ? null
+        : { minWords: { requiredWords: minWords } };
     };
   }
 }

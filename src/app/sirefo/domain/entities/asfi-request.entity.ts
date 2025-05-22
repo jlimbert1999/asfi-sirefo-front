@@ -13,6 +13,7 @@ interface requestProps {
   status: string;
   file: file;
   circularNumber: string | null;
+  dataSheetFile: string;
 }
 
 interface file {
@@ -35,6 +36,7 @@ export class AsfiRequest {
   status: string;
   file: file;
   circularNumber: string | null;
+  dataSheetFile: string;
 
   constructor(params: requestProps) {
     this.id = params.id;
@@ -51,6 +53,7 @@ export class AsfiRequest {
     this.status = params.status;
     this.file = params.file;
     this.circularNumber = params.circularNumber;
+    this.dataSheetFile = params.dataSheetFile;
   }
 
   get processTypeLabel(): string {

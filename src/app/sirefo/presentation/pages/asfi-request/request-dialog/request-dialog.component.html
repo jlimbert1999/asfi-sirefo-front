@@ -18,6 +18,16 @@
                   />
                   <label>Nombre Autoridad Solicitante</label>
                 </p-floatlabel>
+                @if (form.get('requestingAuthority')?.hasError &&  form.get('requestingAuthority')?.touched) {
+                <p-message
+                  severity="error"
+                  variant="simple"
+                  size="small"
+                  styleClass="mt-2 px-2"
+                >
+                  {{ form.get("requestingAuthority")?.errors | formErrorMessages:formMessages?.['requestingAuthority'] }}
+                </p-message>
+                }
               </div>
               <div class="col-span-2">
                 <p-floatlabel>
@@ -28,6 +38,16 @@
                   />
                   <label>Cargo Autoridad Solicitante</label>
                 </p-floatlabel>
+                @if (form.get('authorityPosition')?.hasError && form.get('authorityPosition')?.touched) {
+                <p-message
+                  severity="error"
+                  variant="simple"
+                  size="small"
+                  styleClass="mt-2 px-2"
+                >
+                  {{ form.get("authorityPosition")?.errors | formErrorMessages:formMessages?.['authorityPosition'] }}
+                </p-message>
+                }
               </div>
               <div class="sm:col-span-2">
                 <p-floatlabel>
@@ -38,6 +58,7 @@
                   />
                   <label>Codigo Solicitud (CITE)</label>
                 </p-floatlabel>
+               
               </div>
               <div>
                 <p-select
@@ -66,18 +87,21 @@
                     mode="basic"
                     chooseIcon="pi pi-upload"
                     accept=".pdf"
-                    (onSelect)="onFileSelect($event)"
-                    [auto]="true"
+                    (onSelect)="onPdfSelect($event)"
+                    auto
+                    customUpload
                     chooseLabel="Seleccionar"
                   />
                   <div>
-                    @if(selectedFileName()){
-                      <div class="px-3 py-2 rounded-md bg-green-50 ring-1 ring-green-500 text-black">
-                        <i class="pi pi-file-pdf"></i>
-                        <span class="ml-2">{{ selectedFileName()}}</span> 
-                      </div>
+                    @if(pdfFileName()){
+                    <div
+                      class="px-3 py-2 rounded-md bg-green-50 ring-1 ring-green-500 text-black"
+                    >
+                      <i class="pi pi-file-pdf"></i>
+                      <span class="ml-2">{{ pdfFileName() }}</span>
+                    </div>
                     } @else {
-                      <span>Nota de solicitud dirigida a ASFI - (PDF)</span>
+                    <span>Nota de solicitud dirigida a ASFI - (PDF)</span>
                     }
                   </div>
                 </div>
@@ -128,7 +152,7 @@
                   customUpload
                   class="mr-2 inline-block"
                   [chooseButtonProps]="{ severity: 'secondary' }"
-                  (onSelect)="loadExcel($event)"
+                  (onSelect)="onSpreadSheetSelect($event)"
                 />
               </div>
             </ng-template>
@@ -138,11 +162,12 @@
           <p-table
             #dt
             [value]="datasource()"
-            [rows]="10"
+            [rows]="8"
             [paginator]="true"
             [showCurrentPageReport]="true"
             [tableStyle]="{ 'min-width': '75rem' }"
             currentPageReportTemplate="{first} - {last} de {totalRecords} Registros"
+            [loading]="isDatasourceLoading()"
             [alwaysShowPaginator]="datasource().length > 5"
             paginatorDropdownAppendTo="body"
             [globalFilterFields]="[
@@ -152,21 +177,6 @@
               'maternalLastName'
             ]"
           >
-            <ng-template #caption>
-              <div class="flex justify-end">
-                <p-iconField iconPosition="left">
-                  <p-inputIcon>
-                    <i class="pi pi-search"></i>
-                  </p-inputIcon>
-                  <input
-                    pInputText
-                    type="text"
-                    (input)="onGlobalFilterTable(dt, $event)"
-                    placeholder="Nombres / Nro. Documento"
-                  />
-                </p-iconField>
-              </div>
-            </ng-template>
             <ng-template #header>
               <tr>
                 @for (column of COLUMNS; track $index) {

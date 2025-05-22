@@ -1,4 +1,4 @@
-export interface asfiRequestDetailItem {
+export interface asfiRequestItem {
   item: number;
   maternalLastName: string;
   paternalLastName: string;
@@ -14,7 +14,7 @@ export interface asfiRequestDetailItem {
   supportType: number;
 }
 
-export interface asfiFundTransferDetail {
+export interface asfiFundTransferItem {
   item: number;
   maternalLastName: string;
   paternalLastName: string;

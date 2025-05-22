@@ -5,19 +5,11 @@ import { map } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
 import {
-  attachedFile,
   IAsfiRequest,
-  AsfiRequestMapper,
-  submitRequestDetail,
   aprovedRequest,
+  asfiRequestItem,
+  AsfiRequestMapper,
 } from '../../infrastructure';
-
-interface updateProps {
-  id: string;
-  form: Object;
-  details: submitRequestDetail[];
-  file?: attachedFile;
-}
 
 interface filterParams {
   limit: number;
@@ -38,21 +30,19 @@ export class AsfiRequestService {
 
   constructor() {}
 
-  create(form: Object, details: submitRequestDetail[], file: attachedFile) {
+  create(form: Object, details: asfiRequestItem[]) {
     return this.http
       .post<IAsfiRequest>(this.URL, {
         ...form,
-        file,
         details,
       })
       .pipe(map((resp) => AsfiRequestMapper.fromResponse(resp)));
   }
 
-  update({ id, form, file, details }: updateProps) {
+  update(id: string, form: Object, details: asfiRequestItem[]) {
     return this.http
       .patch<IAsfiRequest>(`${this.URL}/${id}`, {
         ...form,
-        file,
         details,
       })
       .pipe(map((resp) => AsfiRequestMapper.fromResponse(resp)));

@@ -1,6 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
@@ -8,43 +14,37 @@ import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
-import { Table, TableModule } from 'primeng/table';
 import { FloatLabel } from 'primeng/floatlabel';
+import { MessageModule } from 'primeng/message';
 import { ToolbarModule } from 'primeng/toolbar';
 import { StepperModule } from 'primeng/stepper';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { DialogModule } from 'primeng/dialog';
+import { MessageService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
+import { TableModule } from 'primeng/table';
 
-import { switchMap } from 'rxjs';
+import { catchError, forkJoin, of, switchMap } from 'rxjs';
 
 import {
   ExcelService,
   AsfiRequestService,
   FileUploadService,
 } from '../../../services';
-import { submitRequestDetail } from '../../../../infrastructure';
-import { MessageService } from '../../../../../shared';
+import { asfiRequestItem } from '../../../../infrastructure';
+import {
+  FieldValidationErrorMessages,
+  FormErrorMessagesPipe,
+  AlertService,
+} from '../../../../../shared';
+import { AuthService } from '../../../../../auth/presentation/services/auth.service';
+import { CustomFormValidators } from '../../../../../helpers';
 import { AsfiRequest } from '../../../../domain';
-
-interface excelData {
-  Item: number;
-  'Apellido Paterno': string;
-  'Apellido Materno': string;
-  Nombres: string;
-  'Tipo Documento': number;
-  'Numero Documento': string;
-  Extension: string;
-  Monto: number;
-  'Tipo Respaldo': number;
-  'Documento Respaldo': string;
-  'Auto Conclusion': string;
-  'Razon Social': string;
-}
 
 interface column {
   header: string;
-  columnDef: keyof submitRequestDetail;
+  columnDef: keyof asfiRequestItem;
   width?: string;
 }
 
@@ -64,16 +64,23 @@ interface column {
     InputIconModule,
     ToolbarModule,
     DialogModule,
+    MessageModule,
+    ToastModule,
+    FormErrorMessagesPipe,
   ],
   templateUrl: './request-dialog.component.html',
+  changeDetection: ChangeDetectionStrategy.Default,
 })
 export class RequestDialogComponent implements OnInit {
   private formBuilder = inject(FormBuilder);
   private excelService = inject(ExcelService);
   private dialogRef = inject(DynamicDialogRef);
-  private messageService = inject(MessageService);
+  private alertService = inject(AlertService);
   private asfiRequestService = inject(AsfiRequestService);
   private fileUploadService = inject(FileUploadService);
+  private messageService = inject(MessageService);
+
+  private user = inject(AuthService).user();
 
   data: AsfiRequest | undefined = inject(DynamicDialogConfig).data;
 
@@ -98,21 +105,49 @@ export class RequestDialogComponent implements OnInit {
     { value: 'S', label: 'Suspensión' },
   ];
 
-  datasource = signal<submitRequestDetail[]>([]);
-
-  form = this.formBuilder.group({
-    authorityPosition: ['', Validators.required],
-    requestingAuthority: ['', Validators.required],
+  form = this.formBuilder.nonNullable.group({
+    requestingAuthority: [
+      this.user?.fullName,
+      [
+        Validators.required,
+        Validators.minLength(5),
+        Validators.pattern(/^[A-Za-zÁÉÍÓÚÑáéíóúñ' -]+$/),
+        CustomFormValidators.minWordsValidator(2),
+      ],
+    ],
+    authorityPosition: [
+      this.user?.position,
+      [
+        Validators.required,
+        Validators.minLength(4),
+        Validators.pattern(/^[A-Za-zÁÉÍÓÚÑáéíóúñ.\- ]+$/),
+      ],
+    ],
     requestCode: ['', Validators.required],
     department: ['', Validators.required],
     processType: ['', Validators.required],
   });
 
+  protected formMessages: FieldValidationErrorMessages = {
+    requestingAuthority: {
+      pattern: 'Solo letras, espacios y guiones, sin caracteres especiales',
+      minWords: 'Se requieren al menos 2 palabras',
+    },
+    authorityPosition: {
+      pattern: 'Solo letras, espacios y guiones, sin caracteres especiales',
+    },
+  };
+
+  datasource = signal<asfiRequestItem[]>([]);
   isErrorDialogShowing = signal(false);
   errorMessages = signal<string[]>([]);
 
-  selectedFile = signal<File | null>(null);
-  selectedFileName = signal<string | null>(null);
+  pdfFile = signal<File | null>(null);
+  pdfFileName = signal<string | null>(null);
+
+  spreadsheetFile = signal<File | null>(null);
+
+  isDatasourceLoading = signal(false);
 
   ngOnInit(): void {
     this.loadFormData();
@@ -133,50 +168,43 @@ export class RequestDialogComponent implements OnInit {
     });
   }
 
-  onGlobalFilterTable(table: Table, event: Event) {
-    table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
-  }
-
-  onFileSelect(event: FileSelectEvent) {
+  onPdfSelect(event: FileSelectEvent) {
     const [file] = event.files;
     if (file && file.type !== 'application/pdf') return;
-    this.selectedFile.set(file);
-    this.selectedFileName.set(file.name);
+    this.pdfFile.set(file);
+    this.pdfFileName.set(file.name);
+  }
+
+  onSpreadSheetSelect(event: FileSelectEvent) {
+    const [file] = event.files;
+    if (!file) return;
+    this.spreadsheetFile.set(file);
+    const colums = this.COLUMNS.map(({ header }) => header);
+    this.excelService.readExcelFile(file, colums).subscribe({
+      next: (data) => {
+        this.datasource.set(this.excelDataToDto(data));
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Formato incorrecto',
+          detail: 'No se puedo cargar el archivo',
+        });
+      },
+    });
   }
 
   close() {
     this.dialogRef.close();
   }
 
-  async loadExcel(event: FileSelectEvent) {
-    const [file] = event.files;
-    if (!file) return;
-    const data: excelData[] = await this.excelService.readExcelFile(file);
-    this.datasource.set(this.excelDataToDto(data));
-  }
-
   get isFormValid() {
     return this.data
       ? this.form.valid && this.datasource().length > 0
-      : this.form.valid && this.datasource().length > 0 && this.selectedFile();
-  }
-
-  private excelDataToDto(data: excelData[]): submitRequestDetail[] {
-    return data.map((el) => ({
-      item: el.Item.toString(),
-      maternalLastName: el['Apellido Materno'],
-      paternalLastName: el['Apellido Paterno'],
-      autoConclusion: el['Auto Conclusion'],
-      complement: el['Tipo Documento'],
-      extension: el['Extension'],
-      documentNumber: el['Numero Documento'],
-      documentType: el['Tipo Documento'],
-      supportDocument: el['Documento Respaldo'],
-      amount: el['Monto'],
-      firstName: el['Nombres'],
-      businessName: el['Razon Social'],
-      supportType: el['Tipo Respaldo'],
-    }));
+      : this.form.valid &&
+          this.datasource().length > 0 &&
+          this.pdfFile() &&
+          this.spreadsheetFile();
   }
 
   private handleHtttErrrors(error: HttpErrorResponse) {
@@ -184,7 +212,7 @@ export class RequestDialogComponent implements OnInit {
     switch (error.status) {
       case 409:
         const request = error.error['request'];
-        this.messageService.message({
+        this.alertService.message({
           header: 'Error al registrar la solicitud',
           description:
             typeof message === 'string' ? message : 'La solicitud es invalida',
@@ -203,6 +231,71 @@ export class RequestDialogComponent implements OnInit {
     }
   }
 
+  private loadFormData() {
+    if (!this.data) return;
+
+    const { file, dataSheetFile, ...props } = this.data;
+
+    this.form.patchValue(props);
+
+    this.pdfFileName.set(file.originalName);
+
+    this.fileUploadService
+      .getFile(dataSheetFile)
+      .pipe(
+        switchMap((file) => this.excelService.readExcelFile(file)),
+        catchError(() => of([]))
+      )
+      .subscribe((data) => {
+        this.datasource.set(this.excelDataToDto(data));
+      });
+  }
+
+  private excelDataToDto(data: any[]): asfiRequestItem[] {
+    return data.map((el) => ({
+      item: el.Item.toString(),
+      maternalLastName: el['Apellido Materno'],
+      paternalLastName: el['Apellido Paterno'],
+      autoConclusion: el['Auto Conclusion'],
+      complement: el['Tipo Documento'],
+      extension: el['Extension'],
+      documentNumber: el['Numero Documento'],
+      documentType: el['Tipo Documento'],
+      supportDocument: el['Documento Respaldo'],
+      amount: el['Monto'],
+      firstName: el['Nombres'],
+      businessName: el['Razon Social'],
+      supportType: el['Tipo Respaldo'],
+    }));
+  }
+
+  private buildSaveMethod() {
+    return forkJoin([
+      this.pdfFile()
+        ? this.fileUploadService.uploadAsfiFile(this.pdfFile()!)
+        : of(null),
+      this.spreadsheetFile()
+        ? this.fileUploadService.uploadAsfiFile(this.spreadsheetFile()!)
+        : of(null),
+    ]).pipe(
+      switchMap(([file, dataSheetFile]) => {
+        const formData = {
+          ...this.form.value,
+          ...(file && { file }),
+          ...(dataSheetFile && { dataSheetFile: dataSheetFile.fileName }),
+        };
+
+        return this.data
+          ? this.asfiRequestService.update(
+              this.data.id,
+              formData,
+              this.datasource()
+            )
+          : this.asfiRequestService.create(formData, this.datasource());
+      })
+    );
+  }
+
   private parseValidationErrors(errors: string[]): string[] {
     return errors.map((item) => {
       const parts = item.split('.', 3);
@@ -211,45 +304,5 @@ export class RequestDialogComponent implements OnInit {
       const mensaje = parts.slice(2).join('.');
       return `Fila ${index + 1}: ${mensaje.trim()}`;
     });
-  }
-
-  private loadFormData() {
-    if (!this.data) return;
-    const { file, ...props } = this.data;
-    this.form.patchValue(props);
-    this.selectedFileName.set(file.originalName);
-  }
-
-  private buildSaveMethod() {
-    if (!this.data) {
-      return this.fileUploadService
-        .uploadAsfiNote(this.selectedFile()!)
-        .pipe(
-          switchMap((uploadedFile) =>
-            this.asfiRequestService.create(
-              this.form.value,
-              this.datasource(),
-              uploadedFile
-            )
-          )
-        );
-    }
-
-    return this.selectedFile()
-      ? this.fileUploadService.uploadAsfiNote(this.selectedFile()!).pipe(
-          switchMap((uploadedFile) =>
-            this.asfiRequestService.update({
-              id: this.data!.id,
-              form: this.form.value,
-              details: this.datasource(),
-              file: uploadedFile,
-            })
-          )
-        )
-      : this.asfiRequestService.update({
-          id: this.data!.id,
-          form: this.form.value,
-          details: this.datasource(),
-        });
   }
 }

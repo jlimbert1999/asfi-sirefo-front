@@ -6,11 +6,8 @@ import { map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   IAsfiRequest,
-  attachedFile,
   IDetailRequest,
   AsfiRequestMapper,
-  submitRequestDetail,
-  asfiFundTransferDetail,
   aprovedRequest,
 } from '../../infrastructure';
 
@@ -54,8 +51,8 @@ export class RetentionService {
 
   remitirSolicitud(
     form: Object,
-    details: submitRequestDetail[],
-    file: attachedFile
+    details: any[],
+    file: any
   ) {
     return this.http
       .post<IAsfiRequest>(`${this.url}/remitir-solicitud`, {
@@ -68,8 +65,8 @@ export class RetentionService {
 
   updateSolicitud(
     form: Object,
-    details: submitRequestDetail[],
-    file?: attachedFile
+    details: any[],
+    file?: any
   ) {
     return this.http
       .post<IAsfiRequest>(`${this.url}/remitir-solicitud`, {
@@ -82,8 +79,8 @@ export class RetentionService {
 
   requestAsfiFundTransfer(
     form: Object,
-    details: asfiFundTransferDetail[],
-    file: attachedFile
+    details: any[],
+    file: any
   ) {
     return this.http.post(`${this.url}/asfi-fund-transfer`, {
       ...form,

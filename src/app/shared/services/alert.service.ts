@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { DialogService } from 'primeng/dynamicdialog';
+
 import { MessageDialogComponent } from '../components/dialogs/message-dialog/message-dialog.component';
 
 interface alertConfig {
@@ -15,7 +16,7 @@ type icons = 'error' | 'warning' | 'success' | 'loading' | 'security';
 @Injectable({
   providedIn: 'root',
 })
-export class MessageService {
+export class AlertService {
   private dialogService = inject(DialogService);
 
   constructor() {}

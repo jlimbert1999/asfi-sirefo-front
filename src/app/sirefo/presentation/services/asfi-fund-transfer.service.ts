@@ -4,19 +4,11 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { map } from 'rxjs';
 
 import {
-  asfiFundTransferDetail,
   AsfiFundTransferMapper,
-  attachedFile,
+  asfiFundTransferItem,
   IAsfiFundTransfer,
 } from '../../infrastructure';
 import { environment } from '../../../../environments/environment';
-
-interface updateProps {
-  id: string;
-  form: Object;
-  details: asfiFundTransferDetail[];
-  file?: attachedFile;
-}
 
 interface filterParams {
   limit: number;
@@ -37,21 +29,19 @@ export class AsfiFundTransferService {
 
   constructor() {}
 
-  create(form: Object, details: asfiFundTransferDetail[], file: attachedFile) {
+  create(form: Object, details: asfiFundTransferItem[]) {
     return this.http
       .post<IAsfiFundTransfer>(this.URL, {
         ...form,
-        file,
         details,
       })
       .pipe(map((resp) => AsfiFundTransferMapper.fromResponse(resp)));
   }
 
-  update({ id, form, file, details }: updateProps) {
+  update(id: string, form: Object, details: asfiFundTransferItem[]) {
     return this.http
       .patch<IAsfiFundTransfer>(`${this.URL}/${id}`, {
         ...form,
-        file,
         details,
       })
       .pipe(map((resp) => AsfiFundTransferMapper.fromResponse(resp)));
