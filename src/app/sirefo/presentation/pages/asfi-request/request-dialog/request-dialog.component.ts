@@ -11,6 +11,9 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
+import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputGroupModule } from 'primeng/inputgroup';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
@@ -53,18 +56,21 @@ interface column {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    StepperModule,
-    ButtonModule,
-    TableModule,
+    InputGroupAddonModule,
+    InputNumberModule,
+    InputGroupModule,
     FileUploadModule,
     InputTextModule,
-    FloatLabel,
-    SelectModule,
     IconFieldModule,
     InputIconModule,
+    StepperModule,
     ToolbarModule,
-    DialogModule,
     MessageModule,
+    ButtonModule,
+    SelectModule,
+    DialogModule,
+    TableModule,
+    FloatLabel,
     ToastModule,
     FormErrorMessagesPipe,
   ],
@@ -84,6 +90,7 @@ export class RequestDialogComponent implements OnInit {
 
   data: AsfiRequest | undefined = inject(DynamicDialogConfig).data;
 
+  readonly YEAR = new Date().getFullYear();
   readonly COLUMNS: column[] = [
     { header: 'Item', columnDef: 'item', width: '40px' },
     { header: 'Nombres', columnDef: 'firstName', width: '15rem' },
@@ -123,7 +130,10 @@ export class RequestDialogComponent implements OnInit {
         Validators.pattern(/^[A-Za-zÁÉÍÓÚÑáéíóúñ.\- ]+$/),
       ],
     ],
-    requestCode: ['', Validators.required],
+    requestCode: [
+      '',
+      [Validators.required, Validators.min(1), Validators.max(99999)],
+    ],
     department: ['', Validators.required],
     processType: ['', Validators.required],
   });
@@ -234,7 +244,7 @@ export class RequestDialogComponent implements OnInit {
   private loadFormData() {
     if (!this.data) return;
 
-    const { file, dataSheetFile, ...props } = this.data;
+    const { file, dataSheetFile, requestCode, ...props } = this.data;
 
     this.form.patchValue(props);
 

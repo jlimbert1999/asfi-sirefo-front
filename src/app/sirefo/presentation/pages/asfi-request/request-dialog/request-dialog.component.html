@@ -18,7 +18,8 @@
                   />
                   <label>Nombre Autoridad Solicitante</label>
                 </p-floatlabel>
-                @if (form.get('requestingAuthority')?.hasError &&  form.get('requestingAuthority')?.touched) {
+                @if (form.get('requestingAuthority')?.hasError &&
+                form.get('requestingAuthority')?.touched) {
                 <p-message
                   severity="error"
                   variant="simple"
@@ -38,7 +39,8 @@
                   />
                   <label>Cargo Autoridad Solicitante</label>
                 </p-floatlabel>
-                @if (form.get('authorityPosition')?.hasError && form.get('authorityPosition')?.touched) {
+                @if (form.get('authorityPosition')?.hasError &&
+                form.get('authorityPosition')?.touched) {
                 <p-message
                   severity="error"
                   variant="simple"
@@ -49,16 +51,25 @@
                 </p-message>
                 }
               </div>
-              <div class="sm:col-span-2">
-                <p-floatlabel>
-                  <input
-                    pInputText
-                    formControlName="requestCode"
-                    class="w-full"
-                  />
-                  <label>Codigo Solicitud (CITE)</label>
-                </p-floatlabel>
-               
+              <div>
+                <p-inputgroup>
+                  <p-inputgroup-addon class="w-[220px] text-xs">
+                    CE/SF-DRT-72
+                  </p-inputgroup-addon>
+                  <p-floatlabel class="w-[100px]">
+                    <p-inputnumber
+                      formControlName="requestCode"
+                      mode="decimal"
+                      [useGrouping]="false"
+                      [min]="1"
+                      [max]="99999"
+                    />
+                    <label>Nro. Cite</label>
+                  </p-floatlabel>
+                  <p-inputgroup-addon class="w-[80px] text-xs">
+                    {{ YEAR }}
+                  </p-inputgroup-addon>
+                </p-inputgroup>
               </div>
               <div>
                 <p-select
@@ -70,7 +81,7 @@
                   formControlName="processType"
                 />
               </div>
-              <div>
+              <div class="sm:col-span-2">
                 <p-floatlabel>
                   <input
                     pInputText

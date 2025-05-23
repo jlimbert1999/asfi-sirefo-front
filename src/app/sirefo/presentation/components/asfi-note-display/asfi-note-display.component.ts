@@ -56,9 +56,9 @@ export class AsfiNoteDisplayComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // this.fileService.getFile(this.url()).subscribe((file) => {
-    //   // const blob = new Blob([file], { type: 'application/pdf' });
-    //   this.source=(URL.createObjectURL(file));
-    // });
+    this.fileService.getFile(this.url()).subscribe((file) => {
+      const blob = new Blob([file], { type: 'application/pdf' });
+      this.source.set(URL.createObjectURL(blob));
+    });
   }
 }

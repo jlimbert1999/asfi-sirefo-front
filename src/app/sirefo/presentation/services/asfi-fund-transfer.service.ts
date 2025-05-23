@@ -39,6 +39,7 @@ export class AsfiFundTransferService {
   }
 
   update(id: string, form: Object, details: asfiFundTransferItem[]) {
+    console.log('UPDATE FORM', form);
     return this.http
       .patch<IAsfiFundTransfer>(`${this.URL}/${id}`, {
         ...form,

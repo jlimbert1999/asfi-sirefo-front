@@ -16,6 +16,9 @@ import { CommonModule } from '@angular/common';
 
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
+import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputGroupModule } from 'primeng/inputgroup';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
@@ -51,6 +54,7 @@ import { AsfiFundTransfer } from '../../../../domain';
 import { FormErrorMessagesPipe } from '../../../../../shared';
 import { CustomFormValidators } from '../../../../../helpers';
 import { AuthService } from '../../../../../auth/presentation/services/auth.service';
+import { SelectSearchComponent } from '../../../../../shared/components/inputs/select-search/select-search.component';
 
 interface column {
   header: string;
@@ -81,7 +85,11 @@ interface selectOption<T> {
     ToolbarModule,
     DialogModule,
     MessageModule,
+    InputGroupAddonModule,
+    InputGroupModule,
     FormErrorMessagesPipe,
+    InputNumberModule,
+    SelectSearchComponent,
   ],
   templateUrl: './asfi-fund-transfer-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -98,6 +106,7 @@ export class AsfiFundTransferDialogComponent implements OnInit {
   private asfiRequestService = inject(AsfiRequestService);
   private user = inject(AuthService).user();
 
+  readonly YEAR = new Date().getFullYear();
   readonly COLUMNS: column[] = [
     { header: 'Item', columnDef: 'item', width: '40px' },
     { header: 'Nombres', columnDef: 'firstName', width: '15rem' },
@@ -149,7 +158,10 @@ export class AsfiFundTransferDialogComponent implements OnInit {
       ],
     ],
 
-    requestCode: ['', Validators.required],
+    requestCode: [
+      '',
+      [Validators.required, Validators.min(1), Validators.max(99999)],
+    ],
     department: ['', Validators.required],
   });
 
@@ -164,11 +176,9 @@ export class AsfiFundTransferDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadFormData();
-    this.getAprovedCodes();
   }
 
   save() {
-    if (!this.isFormValid) return;
     const subscription = this.buildSaveMethod();
     subscription.subscribe({
       next: (asfiRequest) => {
@@ -211,18 +221,17 @@ export class AsfiFundTransferDialogComponent implements OnInit {
     this.dialogRef.close();
   }
 
-  getAprovedCodes() {
-    this.asfiRequestService.searchAprovedCodes().subscribe((data) => {
-      this.aprovedRequests.set(
-        data.map((item) => ({
-          label: `Nro. CITE: ${item.requestCode} / Circular: ${item.circularNumber}`,
-          value: item,
-        }))
-      );
+  searchAprovedRequests(term?: string) {
+    this.asfiRequestService.searchAprovedCodes(term).subscribe((data) => {
+      const selectOptions = data.map((item) => ({
+        label: `Solicitud: ${item.requestCode} / Circular: ${item.circularNumber}`,
+        value: item,
+      }));
+      this.aprovedRequests.set(selectOptions);
     });
   }
 
-  onSelectAsfiRequest(item: aprovedRequest) {
+  onSelectAprovedRequest(item: aprovedRequest) {
     this.selectedAsfiRequest.set(item);
   }
 

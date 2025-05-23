@@ -69,6 +69,12 @@ export class AsfiRequest {
     }
   }
 
+  extractCorrelativo(): number {
+    const parts = this.requestCode.split('/');
+    const val = Number(parts[parts.length - 2]);
+    return isNaN(val) ? 0 : val;
+  }
+
   get statusLabel() {
     switch (this.status) {
       case 'pending':

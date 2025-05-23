@@ -244,7 +244,7 @@ export default class AsfiRequestComponent implements OnInit {
 
   private downloadFile(item: AsfiRequest) {
     const fileExtension = item.dataSheetFile.split('.').pop();
-    const fileName = `SOLICITUD_${item.requestCode}.${fileExtension}`;
+    const fileName = `solicitud_${item.processTypeLabel}_${item.requestCode}.${fileExtension}`.toLocaleLowerCase();
     this.fileService.downloadFileFromUrl(item.dataSheetFile, fileName);
   }
 }

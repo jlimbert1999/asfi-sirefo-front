@@ -201,11 +201,10 @@ export default class AsfiFundTranferComponent implements OnInit {
             },
           },
           {
-            icon: 'pi pi-building-columns',
-            label: 'Solicitar remision de fondos',
-            disabled: !request.circularNumber,
+            icon: 'pi pi-download',
+            label: 'Descargar datos',
             command: () => {
-              // this.openAsfiFundTransferDialog(request);
+              this.downloadFile(request);
             },
           },
         ],
@@ -224,8 +223,6 @@ export default class AsfiFundTranferComponent implements OnInit {
     this.filter();
   }
 
-
-
   get isFilterFormValid() {
     return Object.values(this.filterForm.value).some((value) => value !== null);
     // return Object.values(this.filterForm.value).some((value) => value !== null);
@@ -243,5 +240,12 @@ export default class AsfiFundTranferComponent implements OnInit {
         this.datasource.set(data.requests);
         this.datasize.set(data.length);
       });
+  }
+
+  private downloadFile(item: AsfiFundTransfer) {
+    const fileExtension = item.dataSheetFile.split('.').pop();
+    const fileName =
+      `solicitud_remision_${item.requestCode}.${fileExtension}`.toLocaleLowerCase();
+    this.fileService.downloadFileFromUrl(item.dataSheetFile, fileName);
   }
 }
