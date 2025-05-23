@@ -25,8 +25,10 @@ export function loggingInterceptor(
     ),
   });
 
-  const showUploadIndicator =req.context.get(UPLOAD_INDICATOR) && req.method !== 'GET';
-  const showLoadIndicator = req.context.get(LOAD_INDICATOR) && req.method === 'GET';;
+  const showUploadIndicator =
+    req.context.get(UPLOAD_INDICATOR) && req.method !== 'GET';
+  const showLoadIndicator =
+    req.context.get(LOAD_INDICATOR) && req.method === 'GET';
 
   if (showLoadIndicator) {
     loaderService.toggleLoading(true);
@@ -60,7 +62,11 @@ const handleHttpErrorMessages = (
 
   switch (error.status) {
     case 500:
-      service.show({ severity: 'error', title: 'Ha ocurrido un error' });
+      service.show({
+        severity: 'error',
+        title: 'Error interno',
+        description: 'No se puedo procesar su solicitud',
+      });
       break;
     case 401:
       // authService.logout();

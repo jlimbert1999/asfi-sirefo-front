@@ -165,13 +165,14 @@ export class AsfiCredentialsDialogComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe(() => {
+        console.log('restart save button');
         this.errorMessage.set(null);
         this.isSaveButtonEnabled.set(true);
       });
   }
 
-  showMessage() {
-    this.errorMessage.set('Usuario o contraseña incorrectos');
+  showMessage(message: string) {
+    this.errorMessage.set(message);
     this.messageTrigger$.next();
   }
 
@@ -190,8 +191,12 @@ export class AsfiCredentialsDialogComponent implements OnInit {
           this.dialogRef.close();
         },
         error: (error) => {
-          if (error instanceof HttpErrorResponse && error.status === 401) {
-            this.showMessage();
+          if (error instanceof HttpErrorResponse) {
+            this.showMessage(
+              error.status === 401
+                ? 'Usuario o contraseña incorrectos'
+                : 'No se pudo actualizar sus credenciales'
+            );
           }
         },
       });
