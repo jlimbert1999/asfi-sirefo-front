@@ -1,4 +1,4 @@
-export * from "./retention.service"
+export * from "./sirefo.service"
 export * from "./excel.service"
 export * from "./asfi-fund-transfer.service"
 export * from "./asfi-request.service"

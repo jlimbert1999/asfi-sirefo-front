@@ -148,10 +148,18 @@
 
             <ng-template #end>
               <div class="flex gap-x-2">
+                <p-button
+                  icon="pi pi-question"
+                  (onClick)="isInfoDialogShowing.set(true)"
+                  pTooltip="Descripcion de datos"
+                  tooltipPosition="bottom"
+                />
                 <a
                   severity="secondary"
                   class="p-button"
-                  href="files/formato-cabeceras.xlsx"
+                  href="files/Formato-Retencion-Suspension.ods"
+                  pTooltip="Descargar plantilla"
+                  tooltipPosition="bottom"
                 >
                   <i class="pi pi-arrow-down"></i>
                 </a>
@@ -178,7 +186,6 @@
             [showCurrentPageReport]="true"
             [tableStyle]="{ 'min-width': '75rem' }"
             currentPageReportTemplate="{first} - {last} de {totalRecords} Registros"
-            [loading]="isDatasourceLoading()"
             [alwaysShowPaginator]="datasource().length > 5"
             paginatorDropdownAppendTo="body"
             [globalFilterFields]="[
@@ -252,4 +259,6 @@
   <p>{{ message }}</p>
   }
 </p-dialog>
+} @if(isInfoDialogShowing()){
+<data-format-dialog [(isVisible)]="isInfoDialogShowing" mode="asfi-request" />
 }

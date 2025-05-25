@@ -33,9 +33,13 @@ import {
   SearchInputComponent,
 } from '../../../../shared';
 import { AsfiFundTransferService, FileUploadService } from '../../services';
-import { AsfiFundTransfer } from '../../../domain';
+import { AsfiFundTransfer, asfiRequestStatus } from '../../../domain';
 
-import { AsfiNoteDisplayComponent } from '../../components';
+import {
+  AsfiNoteDisplayComponent,
+  requestDetail,
+  RequestDetailDialogComponent,
+} from '../../components';
 
 @Component({
   selector: 'app-asfi-fund-tranfer',
@@ -106,15 +110,11 @@ export default class AsfiFundTranferComponent implements OnInit {
   ];
 
   readonly STATUS = [
-    { value: 'pending', label: 'Pendientes' },
-    { value: 'completed', label: 'Completados' },
+    { value: asfiRequestStatus.accepted, label: 'Procesado' },
+    { value: asfiRequestStatus.draft, label: 'Registrado' },
+    { value: asfiRequestStatus.rejected, label: 'Rechazado' },
+    { value: asfiRequestStatus.sent, label: 'Enviado' },
   ];
-
-  readonly STATES = [
-    { value: true, label: 'Con circular' },
-    { value: false, label: 'Sin circular' },
-  ];
-
   ngOnInit(): void {
     this.getData();
   }
@@ -171,7 +171,6 @@ export default class AsfiFundTranferComponent implements OnInit {
         values[index] = result;
         return [...values];
       });
-      this.datasize.update((value) => (value += 1));
     });
   }
 
@@ -180,7 +179,38 @@ export default class AsfiFundTranferComponent implements OnInit {
     this.isShowingFile.set(true);
   }
 
-  onShowOptionsMenu(request: any): void {
+  showDetail(item: AsfiFundTransfer) {
+    const data: requestDetail = {
+      requestId: item.requestId,
+      requestCode: item.requestCode,
+      createdAt: item.createdAt,
+    };
+    this.dialogService.open(RequestDetailDialogComponent, {
+      header: 'Detalle Solicitud',
+      data: data,
+      modal: true,
+      width: '50vw',
+      focusOnShow: false,
+      closable: true,
+      breakpoints: {
+        '960px': '75vw',
+        '640px': '90vw',
+      },
+    });
+  }
+
+  filter() {
+    this.index.set(0);
+    this.popoverRef().hide();
+    this.getData();
+  }
+
+  resetFilter() {
+    this.filterForm.reset();
+    this.filter();
+  }
+
+  onShowOptionsMenu(request: AsfiFundTransfer): void {
     this.menuOptions.set([
       {
         label: 'Opciones',
@@ -188,7 +218,8 @@ export default class AsfiFundTranferComponent implements OnInit {
           {
             icon: 'pi pi-pencil',
             label: 'Editar solicitud',
-            disabled: request.status !== 'pending',
+            disabled:
+              request.status === 'draft' || request.status === 'rejected',
             command: () => {
               this.update(request);
             },
@@ -197,7 +228,7 @@ export default class AsfiFundTranferComponent implements OnInit {
             icon: 'pi pi-info-circle',
             label: 'Detalle solicitud',
             command: () => {
-              // this.showDetail(request);
+              this.showDetail(request);
             },
           },
           {
@@ -212,20 +243,8 @@ export default class AsfiFundTranferComponent implements OnInit {
     ]);
   }
 
-  filter() {
-    this.index.set(0);
-    this.popoverRef().hide();
-    this.getData();
-  }
-
-  resetFilter() {
-    this.filterForm.reset();
-    this.filter();
-  }
-
   get isFilterFormValid() {
     return Object.values(this.filterForm.value).some((value) => value !== null);
-    // return Object.values(this.filterForm.value).some((value) => value !== null);
   }
 
   private getData() {

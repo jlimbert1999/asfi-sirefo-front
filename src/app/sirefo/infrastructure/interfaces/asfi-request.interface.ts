@@ -14,6 +14,9 @@ export interface IAsfiRequest {
   file: file;
   circularNumber: string | null;
   dataSheetFile: string;
+  circularDate: string | null;
+  processingStatus: string | null;
+  sendErrorMessage: string | null;
 }
 
 interface file {

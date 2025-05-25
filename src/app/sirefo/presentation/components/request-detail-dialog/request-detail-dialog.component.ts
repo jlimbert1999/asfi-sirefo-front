@@ -12,9 +12,16 @@ import { ProgressBarModule } from 'primeng/progressbar';
 
 import { finalize } from 'rxjs';
 
-import { IDetailRequest } from '../../../../infrastructure';
-import { RetentionService } from '../../../services';
-import { AsfiRequest } from '../../../../domain';
+import { IDetailRequest } from '../../../infrastructure';
+import { SirefoService } from '../../services';
+import { AsfiRequest } from '../../../domain';
+
+export interface requestDetail {
+  requestId: number;
+  processType?: string;
+  requestCode: string;
+  createdAt: Date;
+}
 
 @Component({
   selector: 'app-request-detail-dialog',
@@ -23,10 +30,10 @@ import { AsfiRequest } from '../../../../domain';
     <div>
       <div class="px-4 sm:px-0">
         <h3 class="text-base/7 font-semibold">
-          Solicitud: {{ request.requestCode }}
+          Solicitud: {{ data.requestCode }}
         </h3>
         <p class="mt-1 max-w-2xl text-lg text-gray-500">
-          Registrado el {{ request.createdAt | date : 'short' }}
+          Registrado el {{ data.createdAt | date : 'short' }}
         </p>
       </div>
       <div class="mt-6 border-t border-gray-100">
@@ -39,26 +46,26 @@ import { AsfiRequest } from '../../../../domain';
           <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
             <dt class="text-md font-medium">Tipo solicitud</dt>
             <dd class="mt-1 text-md text-gray-700 sm:col-span-2 sm:mt-0">
-              {{ request.processTypeLabel }}
+              {{ processTypeLabel }}
             </dd>
           </div>
           <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
             <dt class="text-md font-medium">Estado</dt>
             <dd class="mt-1 text-md text-gray-700 sm:col-span-2 sm:mt-0">
-              {{ detail()?.Estado }}
+              {{ detailRequest()?.Estado ?? '-----' }}
             </dd>
           </div>
           <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
             <dt class="text-md font-medium">Descripcion</dt>
             <dd class="mt-1 text-md text-gray-700 sm:col-span-2 sm:mt-0">
-              {{ detail()?.ErrorEnvio }}
+              {{ detailRequest()?.ErrorEnvio ?? '-----' }}
             </dd>
           </div>
           <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
             <dt class="text-md font-medium">Circular</dt>
             <dd class="mt-1 text-md text-gray-700 sm:col-span-2 sm:mt-0">
-              @if( detail()?.Circular){
-              {{ detail()?.Circular }}
+              @if( detailRequest()?.Circular){
+              {{ detailRequest()?.Circular }}
               } @else {
               <span class=" text-red-500">SIN PROCESAR</span>
               }
@@ -67,7 +74,7 @@ import { AsfiRequest } from '../../../../domain';
           <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
             <dt class="text-md font-medium">Fecha circular</dt>
             <dd class="mt-1 text-md text-gray-700 sm:col-span-2 sm:mt-0">
-              {{ detail()?.FechaCircular }}
+              {{ detailRequest()?.FechaCircular ?? '-----' }}
             </dd>
           </div>
         </dl>
@@ -78,10 +85,10 @@ import { AsfiRequest } from '../../../../domain';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RequestDetailDialogComponent implements OnInit {
-  private retentionService = inject(RetentionService);
-  request: AsfiRequest = inject(DynamicDialogConfig).data;
+  private retentionService = inject(SirefoService);
+  data: requestDetail = inject(DynamicDialogConfig).data;
 
-  detail = signal<IDetailRequest | null>(null);
+  detailRequest = signal<IDetailRequest | null>(null);
   isLoading = signal(true);
 
   ngOnInit(): void {
@@ -90,21 +97,32 @@ export class RequestDetailDialogComponent implements OnInit {
 
   getDetail() {
     this.retentionService
-      .getDetailRequest(this.request.requestId, this.getTypeRequest())
+      .getDetailRequest(this.data.requestId, this.getTypeRequest())
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe((data) => {
-        this.detail.set(data);
+        this.detailRequest.set(data);
       });
   }
 
   private getTypeRequest(): 1 | 2 | 4 {
-    switch (this.request.processType) {
+    switch (this.data.processType) {
       case 'R':
         return 1;
       case 'S':
         return 2;
       default:
         return 4;
+    }
+  }
+
+  get processTypeLabel(): string {
+    switch (this.data.processType) {
+      case 'R':
+        return 'Retencion';
+      case 'S':
+        return 'Suspension';
+      default:
+        return 'Remision';
     }
   }
 }

@@ -15,7 +15,7 @@ import { CommonModule } from '@angular/common';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
-import { RetentionService } from '../../services';
+import { SirefoService } from '../../services';
 
 @Component({
   selector: 'app-methods',
@@ -179,7 +179,7 @@ export default class MethodsComponent {
   responseEstadoEnvio = signal<any | null>(null);
   responseConsultarListadoEnvio = signal<any | null>(null);
 
-  private withholdingService = inject(RetentionService);
+  private withholdingService = inject(SirefoService);
 
   text = new FormControl('', {
     nonNullable: true,

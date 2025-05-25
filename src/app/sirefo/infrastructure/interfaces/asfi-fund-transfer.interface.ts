@@ -9,12 +9,15 @@ export interface IAsfiFundTransfer {
   sentDate: string;
   userName: string;
   createdAt: string;
-  circularNumber: null;
+  circularNumber: string | null;
   asfiRequestId: string;
   status: string;
   asfiRequest: asfiRequest;
   file: file;
   dataSheetFile: string;
+  circularDate: string | null;
+  processingStatus: string | null;
+  sendErrorMessage: string | null;
 }
 
 interface asfiRequest {

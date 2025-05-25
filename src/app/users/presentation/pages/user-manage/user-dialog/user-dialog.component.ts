@@ -71,7 +71,6 @@ export class UserDialogComponent implements OnInit {
   }
 
   save() {
-    console.log('user', this.formUser.value);
     const subscription = this.data
       ? this.userService.update(this.data.id, this.formUser.value)
       : this.userService.create(this.formUser.value);

@@ -11,7 +11,7 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputIconModule } from 'primeng/inputicon';
 
-import { RetentionService } from '../../services';
+import { SirefoService } from '../../services';
 import { IRequestStatusItem } from '../../../infrastructure';
 
 @Component({
@@ -21,7 +21,7 @@ import { IRequestStatusItem } from '../../../infrastructure';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class RequestListComponent implements OnInit {
-  private retentionService = inject(RetentionService);
+  private retentionService = inject(SirefoService);
   datasource = signal<IRequestStatusItem[]>([]);
 
   ngOnInit(): void {

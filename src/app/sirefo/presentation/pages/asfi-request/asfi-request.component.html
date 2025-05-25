@@ -18,7 +18,7 @@
         <th>Nro. Cite</th>
         <th>Tipo</th>
         <th>Circular</th>
-        <th>Creacion</th>
+        <th>Fecha Circular</th>
         <th style="width: 25%">Nota</th>
         <th>Estado</th>
         <th style="width: 4rem"></th>
@@ -32,10 +32,16 @@
           @if(item.circularNumber){
           {{ item.circularNumber }}
           } @else {
-          <span class="text-red-500">Sin asignar</span>
+          <span class="text-red-500">Sin procesar</span>
           }
         </td>
-        <td>{{ item.createdAt | date : "short" }}</td>
+        <td>
+          {{
+            item.circularDate
+              ? (item.circularDate | date : "short")
+              : "Sin fecha"
+          }}
+        </td>
         <td>
           <p-button
             [label]="item.file.originalName"
@@ -43,15 +49,18 @@
             icon="pi pi-file-pdf"
             size="small"
             (onClick)="showFile(item)"
+            styleClass="truncate max-w-[350px]"
           />
         </td>
         <td>
-          @switch (item.status) { @case ("pending") {
-          <p-tag severity="warn" value="Pendiente" />
-          } @case ("completed") {
-          <p-tag severity="success" value="Enviado" />
+           @switch (item.status) { @case ('draft') {
+          <p-tag severity="warn" value="Registrado" />
+          } @case ("sent") {
+          <p-tag severity="info" value="Enviado" />
+          } @case ("accepted") {
+          <p-tag severity="success" value="Procesado" />
           } @default {
-          <p-tag value="Desconocido" />
+          <p-tag severity="danger" value="Rechazado" />
           } }
         </td>
 
@@ -139,16 +148,6 @@
             placeholder="Fecha creacion"
             optionValue="value"
             formControlName="createdAt"
-          />
-        </div>
-        <div>
-          <p-select
-            [options]="STATES"
-            optionLabel="label"
-            placeholder="Asignacion circular"
-            class="w-full"
-            optionValue="value"
-            formControlName="isAproved"
           />
         </div>
       </div>

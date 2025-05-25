@@ -31,6 +31,7 @@ import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { MessageService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
+import { TooltipModule } from 'primeng/tooltip';
 
 import { catchError, forkJoin, of, switchMap } from 'rxjs';
 
@@ -55,6 +56,7 @@ import { FormErrorMessagesPipe } from '../../../../../shared';
 import { CustomFormValidators } from '../../../../../helpers';
 import { AuthService } from '../../../../../auth/presentation/services/auth.service';
 import { SelectSearchComponent } from '../../../../../shared/components/inputs/select-search/select-search.component';
+import { DataFormatDialogComponent } from '../../../components';
 
 interface column {
   header: string;
@@ -85,11 +87,13 @@ interface selectOption<T> {
     ToolbarModule,
     DialogModule,
     MessageModule,
+    TooltipModule,
     InputGroupAddonModule,
     InputGroupModule,
     FormErrorMessagesPipe,
     InputNumberModule,
     SelectSearchComponent,
+    DataFormatDialogComponent,
   ],
   templateUrl: './asfi-fund-transfer-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -173,6 +177,7 @@ export class AsfiFundTransferDialogComponent implements OnInit {
   isErrorDialogShowing = signal(false);
   errorMessages = signal<string[]>([]);
   aprovedRequests = signal<selectOption<aprovedRequest>[]>([]);
+  isInfoDialogShowing = signal(false);
 
   ngOnInit(): void {
     this.loadFormData();
@@ -224,7 +229,7 @@ export class AsfiFundTransferDialogComponent implements OnInit {
   searchAprovedRequests(term?: string) {
     this.asfiRequestService.searchAprovedCodes(term).subscribe((data) => {
       const selectOptions = data.map((item) => ({
-        label: `Solicitud: ${item.requestCode} / Circular: ${item.circularNumber}`,
+        label: `Solicitud: ${item.requestCode}  (Circular: ${item.circularNumber})`,
         value: item,
       }));
       this.aprovedRequests.set(selectOptions);
@@ -303,10 +308,13 @@ export class AsfiFundTransferDialogComponent implements OnInit {
 
   private loadFormData() {
     if (!this.data) return;
+    const { file, dataSheetFile, asfiRequest, requestCode, ...props } =
+      this.data;
 
-    const { file, dataSheetFile, asfiRequest, ...props } = this.data;
-
-    this.form.patchValue(props);
+    this.form.patchValue({
+      ...props,
+      requestCode: this.data.extractCorrelative().toString(),
+    });
     this.selectedAsfiRequest.set(asfiRequest);
     this.pdfFileName.set(file.originalName);
 

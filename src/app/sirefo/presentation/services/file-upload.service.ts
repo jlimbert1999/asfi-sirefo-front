@@ -11,18 +11,18 @@ interface uploadedFile {
 })
 export class FileUploadService {
   private http = inject(HttpClient);
-  private readonly url = `${environment.apiUrl}/files`;
+  private readonly URL = `${environment.apiUrl}/files`;
 
   constructor() {}
 
   uploadAsfiFile(file: File) {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<uploadedFile>(`${this.url}/asfi`, formData);
+    return this.http.post<uploadedFile>(`${this.URL}/asfi`, formData);
   }
 
-  getFile(url: string) {
-    return this.http.get(url, { responseType: 'blob' });
+  getFile(fileUrl: string) {
+    return this.http.get(fileUrl, { responseType: 'blob' });
   }
 
   downloadFileFromUrl(url: string, fileName: string): void {

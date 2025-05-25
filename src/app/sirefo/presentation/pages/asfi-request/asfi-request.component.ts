@@ -1,11 +1,11 @@
 import {
   ChangeDetectionStrategy,
+  viewChild,
   Component,
   computed,
   inject,
   OnInit,
   signal,
-  viewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -27,12 +27,15 @@ import { MenuItem } from 'primeng/api';
 
 import { PdfViewerModule } from 'ng2-pdf-viewer';
 
-import { RequestDetailDialogComponent } from './request-detail-dialog/request-detail-dialog.component';
-import { RequestDialogComponent } from './request-dialog/request-dialog.component';
 import { AsfiRequestService, FileUploadService } from '../../services';
-import { AsfiNoteDisplayComponent } from '../../components';
+import { AsfiRequest, asfiRequestStatus } from '../../../domain';
+import {
+  AsfiNoteDisplayComponent,
+  requestDetail,
+  RequestDetailDialogComponent,
+} from '../../components';
 import { SearchInputComponent } from '../../../../shared';
-import { AsfiRequest } from '../../../domain';
+import { RequestDialogComponent } from './request-dialog/request-dialog.component';
 
 @Component({
   selector: 'app-asfi-request',
@@ -85,20 +88,16 @@ export default class AsfiRequestComponent implements OnInit {
   ];
 
   readonly STATUS = [
-    { value: 'pending', label: 'Pendientes' },
-    { value: 'completed', label: 'Completados' },
-  ];
-
-  readonly STATES = [
-    { value: true, label: 'Con circular' },
-    { value: false, label: 'Sin circular' },
+    { value: asfiRequestStatus.accepted, label: 'Procesado' },
+    { value: asfiRequestStatus.draft, label: 'Registrado' },
+    { value: asfiRequestStatus.rejected, label: 'Rechazado' },
+    { value: asfiRequestStatus.sent, label: 'Enviado' },
   ];
 
   filterForm: FormGroup = this.formBuilder.group({
     createdAt: [''],
     processType: [''],
     status: [''],
-    isAproved: [''],
   });
 
   ngOnInit(): void {
@@ -168,14 +167,19 @@ export default class AsfiRequestComponent implements OnInit {
         values[index] = result;
         return [...values];
       });
-      this.datasize.update((value) => (value += 1));
     });
   }
 
-  showDetail(item: AsfiRequest | null) {
+  showDetail(item: AsfiRequest) {
+    const data: requestDetail = {
+      requestId: item.requestId,
+      requestCode: item.requestCode,
+      processType: item.processType,
+      createdAt: item.createdAt,
+    };
     this.dialogService.open(RequestDetailDialogComponent, {
       header: 'Detalle Solicitud',
-      data: item,
+      data: data,
       modal: true,
       width: '50vw',
       focusOnShow: false,
@@ -200,7 +204,8 @@ export default class AsfiRequestComponent implements OnInit {
           {
             icon: 'pi pi-pencil',
             label: 'Editar solicitud',
-            disabled: request.status !== 'pending',
+            disabled:
+              request.status === 'draft' || request.status === 'rejected',
             command: () => {
               this.update(request);
             },
@@ -244,7 +249,8 @@ export default class AsfiRequestComponent implements OnInit {
 
   private downloadFile(item: AsfiRequest) {
     const fileExtension = item.dataSheetFile.split('.').pop();
-    const fileName = `solicitud_${item.processTypeLabel}_${item.requestCode}.${fileExtension}`.toLocaleLowerCase();
+    const fileName =
+      `solicitud_${item.processTypeLabel}_${item.requestCode}.${fileExtension}`.toLocaleLowerCase();
     this.fileService.downloadFileFromUrl(item.dataSheetFile, fileName);
   }
 }

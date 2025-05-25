@@ -63,7 +63,6 @@ export class AuthService {
         roles: string[];
       }>(`${this.URL}/auth`)
       .pipe(
-        tap((resp) => console.log(resp)),
         map(({ menu, token, updatedPassword, roles }) => {
           this._menu.set(menu);
           this._roles.set(roles);
@@ -71,7 +70,6 @@ export class AuthService {
           return this._setAuthentication(token);
         }),
         catchError(() => {
-          console.log('REMOVERRRR');
           this.logout();
           return of(false);
         })

@@ -77,7 +77,6 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.requireCrendentials();
   }
 
   isOutsideClicked(event: MouseEvent) {
@@ -154,9 +153,4 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  private requireCrendentials() {
-    // if (this.authService.roles().includes('employee')) {
-    //   console.log('CRENDENCIASLES');
-    // }
-  }
 }

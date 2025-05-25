@@ -40,7 +40,6 @@ export function loggingInterceptor(
 
   return next(reqWithHeader).pipe(
     catchError((error) => {
-      console.log(error);
       handleHttpErrorMessages(error, toastService);
       return throwError(() => error);
     }),

@@ -19,6 +19,7 @@ import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { FloatLabel } from 'primeng/floatlabel';
 import { MessageModule } from 'primeng/message';
+import { TooltipModule } from 'primeng/tooltip';
 import { ToolbarModule } from 'primeng/toolbar';
 import { StepperModule } from 'primeng/stepper';
 import { ButtonModule } from 'primeng/button';
@@ -44,6 +45,7 @@ import {
 import { AuthService } from '../../../../../auth/presentation/services/auth.service';
 import { CustomFormValidators } from '../../../../../helpers';
 import { AsfiRequest } from '../../../../domain';
+import { DataFormatDialogComponent } from '../../../components';
 
 interface column {
   header: string;
@@ -66,6 +68,7 @@ interface column {
     StepperModule,
     ToolbarModule,
     MessageModule,
+    TooltipModule,
     ButtonModule,
     SelectModule,
     DialogModule,
@@ -73,6 +76,7 @@ interface column {
     FloatLabel,
     ToastModule,
     FormErrorMessagesPipe,
+    DataFormatDialogComponent,
   ],
   templateUrl: './request-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.Default,
@@ -149,7 +153,6 @@ export class RequestDialogComponent implements OnInit {
   };
 
   datasource = signal<asfiRequestItem[]>([]);
-  isErrorDialogShowing = signal(false);
   errorMessages = signal<string[]>([]);
 
   pdfFile = signal<File | null>(null);
@@ -158,6 +161,9 @@ export class RequestDialogComponent implements OnInit {
   spreadsheetFile = signal<File | null>(null);
 
   isDatasourceLoading = signal(false);
+
+  isErrorDialogShowing = signal(false);
+  isInfoDialogShowing = signal(false);
 
   ngOnInit(): void {
     this.loadFormData();
@@ -246,7 +252,10 @@ export class RequestDialogComponent implements OnInit {
 
     const { file, dataSheetFile, requestCode, ...props } = this.data;
 
-    this.form.patchValue(props);
+    this.form.patchValue({
+      ...props,
+      requestCode: this.data.extractCorrelative().toString(),
+    });
 
     this.pdfFileName.set(file.originalName);
 

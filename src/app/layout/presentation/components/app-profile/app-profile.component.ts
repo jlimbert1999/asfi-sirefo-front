@@ -45,8 +45,8 @@ import { AuthService } from '../../../../auth/presentation/services/auth.service
           <span class="text-lg font-bold leading-8">
             {{ user?.fullName | titlecase }}
           </span>
-          <span class="text-sm font-bold leading-8">
-            <!-- {{ user?.jobtitle | uppercase }} -->
+          <span class="text-sm leading-8">
+            {{ user?.position| uppercase }}
           </span>
         </div>
       </div>

@@ -1,3 +1,5 @@
+import { asfiRequestStatus } from '../enums/asfi-request-status.enum';
+
 interface asfiFundTransferProps {
   id: string;
   authorityPosition: string;
@@ -9,12 +11,15 @@ interface asfiFundTransferProps {
   sentDate: Date;
   userName: string;
   createdAt: Date;
-  circularNumber: null;
+  circularNumber: string | null;
   asfiRequestId: string;
-  status: string;
+  status: asfiRequestStatus;
   asfiRequest: asfiRequestProps;
   file: fileProps;
   dataSheetFile: string;
+  circularDate: Date | null;
+  processingStatus: string | null;
+  sendErrorMessage: string | null;
 }
 interface asfiRequestProps {
   id: string;
@@ -39,12 +44,15 @@ export class AsfiFundTransfer {
   sentDate: Date;
   userName: string;
   createdAt: Date;
-  circularNumber: null;
+  circularNumber: string | null;
   asfiRequestId: string;
-  status: string;
+  status: asfiRequestStatus;
   asfiRequest: asfiRequestProps;
   file: fileProps;
   dataSheetFile: string;
+  circularDate: Date | null;
+  processingStatus: string | null;
+  sendErrorMessage: string | null;
 
   constructor({
     id,
@@ -63,6 +71,9 @@ export class AsfiFundTransfer {
     asfiRequest,
     file,
     dataSheetFile,
+    circularDate,
+    processingStatus,
+    sendErrorMessage,
   }: asfiFundTransferProps) {
     this.id = id;
     this.authorityPosition = authorityPosition;
@@ -80,5 +91,30 @@ export class AsfiFundTransfer {
     this.asfiRequest = asfiRequest;
     this.file = file;
     this.dataSheetFile = dataSheetFile;
+    this.circularDate = circularDate;
+    this.processingStatus = processingStatus;
+    this.sendErrorMessage = sendErrorMessage;
+  }
+
+  extractCorrelative(): number {
+    const parts = this.requestCode.split('/');
+    const val = Number(parts[parts.length - 2]);
+    return isNaN(val) ? 1 : val;
+  }
+
+  get statusLabel(): string {
+    switch (this.status) {
+      case asfiRequestStatus.draft:
+        return 'Registrado';
+
+      case asfiRequestStatus.sent:
+        return 'Enviado';
+
+      case asfiRequestStatus.accepted:
+        return 'Aceptado';
+
+      default:
+        return 'Rechazado';
+    }
   }
 }

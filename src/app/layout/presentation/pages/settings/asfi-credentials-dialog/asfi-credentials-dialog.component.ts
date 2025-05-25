@@ -165,7 +165,6 @@ export class AsfiCredentialsDialogComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe(() => {
-        console.log('restart save button');
         this.errorMessage.set(null);
         this.isSaveButtonEnabled.set(true);
       });

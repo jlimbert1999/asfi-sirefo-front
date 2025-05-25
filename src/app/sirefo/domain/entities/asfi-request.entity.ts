@@ -1,3 +1,5 @@
+import { asfiRequestStatus } from '../enums/asfi-request-status.enum';
+
 interface requestProps {
   id: string;
   authorityPosition: string;
@@ -10,10 +12,13 @@ interface requestProps {
   sentDate: Date;
   userName: string;
   createdAt: Date;
-  status: string;
+  status: asfiRequestStatus;
   file: file;
   circularNumber: string | null;
   dataSheetFile: string;
+  circularDate: Date | null;
+  processingStatus: string | null;
+  sendErrorMessage: string | null;
 }
 
 interface file {
@@ -33,10 +38,13 @@ export class AsfiRequest {
   sentDate: Date;
   userName: string;
   createdAt: Date;
-  status: string;
+  status: asfiRequestStatus;
   file: file;
   circularNumber: string | null;
   dataSheetFile: string;
+  circularDate: Date | null;
+  processingStatus: string | null;
+  sendErrorMessage: string | null;
 
   constructor(params: requestProps) {
     this.id = params.id;
@@ -54,6 +62,9 @@ export class AsfiRequest {
     this.file = params.file;
     this.circularNumber = params.circularNumber;
     this.dataSheetFile = params.dataSheetFile;
+    this.circularDate = params.circularDate;
+    this.processingStatus = params.processingStatus;
+    this.sendErrorMessage = params.sendErrorMessage;
   }
 
   get processTypeLabel(): string {
@@ -69,22 +80,25 @@ export class AsfiRequest {
     }
   }
 
-  extractCorrelativo(): number {
+  extractCorrelative(): number {
     const parts = this.requestCode.split('/');
     const val = Number(parts[parts.length - 2]);
-    return isNaN(val) ? 0 : val;
+    return isNaN(val) ? 1 : val;
   }
 
-  get statusLabel() {
+  get statusLabel(): string {
     switch (this.status) {
-      case 'pending':
-        return 'Pendiente';
+      case asfiRequestStatus.draft:
+        return 'Registrado';
 
-      case 'completed':
-        return 'Completado';
+      case asfiRequestStatus.sent:
+        return 'Enviado';
+
+      case asfiRequestStatus.accepted:
+        return 'Aceptado';
 
       default:
-        return 'Unknow';
+        return 'Rechazado';
     }
   }
 }

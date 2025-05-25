@@ -55,6 +55,11 @@ export const routes: Routes = [
               import('./sirefo/presentation/pages/methods/methods.component'),
           },
           {
+            path: 'entities',
+            loadComponent: () =>
+              import('./sirefo/presentation/pages/entities/entities.component'),
+          },
+          {
             path: 'asfi-request',
             loadComponent: () =>
               import(

@@ -7,7 +7,6 @@ import { AsfiCredentialsService } from '../services';
 
 export const checkUserRolesGuard: CanActivateFn = () => {
   const roles = inject(AuthService).roles();
-  console.log(roles);
   if (!roles.includes('employee')) return true;
   const router = inject(Router);
   return inject(AsfiCredentialsService)
