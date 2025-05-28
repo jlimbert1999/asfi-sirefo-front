@@ -9,22 +9,32 @@
     [paginator]="true"
     [rows]="10"
     [rowsPerPageOptions]="[10, 25, 50]"
+    [globalFilterFields]="['Tipo', 'Estado', 'Circular']"
   >
-    <!-- <ng-template #caption>
-      <div class="flex">
-        <p-iconfield iconPosition="left" class="ml-auto">
+    <ng-template #caption>
+      <div class="flex justify-end gap-2">
+        <p-datepicker
+          [iconDisplay]="'input'"
+          [showIcon]="true"
+          inputId="icondisplay"
+          placeholder="Fecha envio"
+          optionValue="value"
+          [(ngModel)]="date"
+          (ngModelChange)="getData()"
+        />
+        <p-iconfield iconPosition="left">
           <p-inputicon>
             <i class="pi pi-search"></i>
           </p-inputicon>
           <input
             pInputText
             type="text"
-           
-            placeholder="Search keyword"
+            placeholder="Buscar solicitud"
+            (input)="onGlobalFilter(dt2, $event)"
           />
         </p-iconfield>
       </div>
-    </ng-template> -->
+    </ng-template>
     <ng-template #header>
       <tr>
         <th>Circular</th>

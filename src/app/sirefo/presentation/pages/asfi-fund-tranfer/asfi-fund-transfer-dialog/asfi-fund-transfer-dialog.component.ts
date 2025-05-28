@@ -166,7 +166,7 @@ export class AsfiFundTransferDialogComponent implements OnInit {
       '',
       [Validators.required, Validators.min(1), Validators.max(99999)],
     ],
-    department: ['', Validators.required],
+    department: ['ADMINISTRACION TRIBUTARIA MINICIPAL DE SACABA', Validators.required],
   });
 
   pdfFile = signal<File | null>(null);

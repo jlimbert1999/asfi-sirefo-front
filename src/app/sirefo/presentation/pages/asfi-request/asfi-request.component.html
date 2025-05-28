@@ -10,7 +10,10 @@
   <p-table [value]="datasource()" [tableStyle]="{ 'min-width': '50rem' }">
     <ng-template #caption>
       <div class="flex justify-end">
-        <search-input placeholder="Buscar" (onSearch)="search($event)" />
+        <search-input
+          placeholder="Buscar numero de cite"
+          (onSearch)="search($event)"
+        />
       </div>
     </ng-template>
     <ng-template #header>
@@ -53,7 +56,7 @@
           />
         </td>
         <td>
-           @switch (item.status) { @case ('draft') {
+          @switch (item.status) { @case ('draft') {
           <p-tag severity="warn" value="Registrado" />
           } @case ("sent") {
           <p-tag severity="info" value="Enviado" />

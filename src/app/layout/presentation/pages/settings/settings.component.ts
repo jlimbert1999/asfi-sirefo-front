@@ -147,7 +147,11 @@ import { CustomFormValidators } from '../../../../helpers';
         >
       </div>
       }
-      <p-button label="Guardar" [disabled]="formUser.invalid" (onClick)="save()" />
+      <p-button
+        label="Guardar"
+        [disabled]="formUser.invalid"
+        (onClick)="save()"
+      />
     </div>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -200,6 +204,7 @@ export default class SettingsComponent implements OnInit {
   save() {
     const { password } = this.formUser.value;
     this.authService.updateMyUser(password).subscribe(() => {
+      this.formUser.reset({});
       this.showMessage();
     });
   }

@@ -5,13 +5,17 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
-import { TableModule } from 'primeng/table';
-import { SirefoService } from '../../services';
+import { Table, TableModule } from 'primeng/table';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputIconModule } from 'primeng/inputicon';
+
 import { asfiEntities } from '../../../infrastructure';
+import { SirefoService } from '../../services';
 
 @Component({
   selector: 'app-entities',
-  imports: [TableModule],
+  imports: [TableModule, IconFieldModule, InputTextModule, InputIconModule],
   template: `
     <div class="flex">
       <span class="font-medium text-2xl">Entidades Vigentes</span>
@@ -24,7 +28,28 @@ import { asfiEntities } from '../../../infrastructure';
         [paginator]="true"
         [rows]="10"
         [rowsPerPageOptions]="[10, 25, 50]"
+        [globalFilterFields]="[
+          'Descripcion',
+          'CodigoEnvio',
+          'CodigoTipoEntidad'
+        ]"
       >
+        <ng-template #caption>
+          <div class="flex">
+            <p-iconfield iconPosition="left" class="ml-auto">
+              <p-inputicon>
+                <i class="pi pi-search"></i>
+              </p-inputicon>
+              <input
+                pInputText
+                type="text"
+                (input)="onGlobalFilter(dt2, $event)"
+                placeholder="Buscar entidad"
+              />
+            </p-iconfield>
+          </div>
+        </ng-template>
+
         <ng-template #header>
           <tr>
             <th>Codigo Envio</th>
@@ -55,7 +80,7 @@ import { asfiEntities } from '../../../infrastructure';
 })
 export default class EntitiesComponent implements OnInit {
   private sirefoService = inject(SirefoService);
-  
+
   datasource = signal<asfiEntities[]>([]);
   ngOnInit(): void {
     this.getData();
@@ -65,5 +90,9 @@ export default class EntitiesComponent implements OnInit {
     this.sirefoService.consultarEntidadVigente().subscribe((data) => {
       this.datasource.set(data);
     });
+  }
+
+  onGlobalFilter(table: Table, event: Event) {
+    table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
   }
 }

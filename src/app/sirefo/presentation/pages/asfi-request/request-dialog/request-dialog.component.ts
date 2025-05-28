@@ -43,9 +43,9 @@ import {
   AlertService,
 } from '../../../../../shared';
 import { AuthService } from '../../../../../auth/presentation/services/auth.service';
+import { DataFormatDialogComponent } from '../../../components';
 import { CustomFormValidators } from '../../../../../helpers';
 import { AsfiRequest } from '../../../../domain';
-import { DataFormatDialogComponent } from '../../../components';
 
 interface column {
   header: string;
@@ -138,7 +138,7 @@ export class RequestDialogComponent implements OnInit {
       '',
       [Validators.required, Validators.min(1), Validators.max(99999)],
     ],
-    department: ['', Validators.required],
+    department: ['ADMINISTRACION TRIBUTARIA MINICIPAL DE SACABA', Validators.required],
     processType: ['', Validators.required],
   });
 

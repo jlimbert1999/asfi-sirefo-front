@@ -204,8 +204,7 @@ export default class AsfiRequestComponent implements OnInit {
           {
             icon: 'pi pi-pencil',
             label: 'Editar solicitud',
-            disabled:
-              request.status === 'draft' || request.status === 'rejected',
+            disabled: request.status === 'accepted' || request.status === 'sent',
             command: () => {
               this.update(request);
             },

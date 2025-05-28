@@ -142,7 +142,7 @@ export default class AsfiFundTranferComponent implements OnInit {
         '640px': '90vw',
       },
     });
-    ref.onClose.subscribe((item: any) => {
+    ref.onClose.subscribe((item: AsfiFundTransfer | undefined) => {
       if (!item) return;
       this.datasource.update((values) =>
         [item, ...values].slice(0, this.limit())
@@ -219,7 +219,7 @@ export default class AsfiFundTranferComponent implements OnInit {
             icon: 'pi pi-pencil',
             label: 'Editar solicitud',
             disabled:
-              request.status === 'draft' || request.status === 'rejected',
+              request.status === 'accepted' || request.status === 'sent',
             command: () => {
               this.update(request);
             },

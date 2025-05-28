@@ -14,12 +14,11 @@ import { finalize } from 'rxjs';
 
 import { IDetailRequest } from '../../../infrastructure';
 import { SirefoService } from '../../services';
-import { AsfiRequest } from '../../../domain';
 
 export interface requestDetail {
-  requestId: number;
   processType?: string;
   requestCode: string;
+  requestId: number;
   createdAt: Date;
 }
 

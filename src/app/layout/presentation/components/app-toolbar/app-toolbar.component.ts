@@ -18,8 +18,8 @@ import { LayoutService } from '../../services/layout.service';
         <i class="pi pi-bars"></i>
       </button>
       <a class="layout-topbar-logo" routerLink="/">
-        <!-- <img src="images/icons/app-icon.png" alt="App icon" class="w-[10px]" /> -->
-        <span>SIREFO</span>
+        <!-- <span>SIREFO</span> -->
+        <img src="images/icons/app-icon.png" alt="App Icon" class="w-9 h-9 mr-2" />
       </a>
     </div>
 
@@ -79,7 +79,6 @@ import { LayoutService } from '../../services/layout.service';
             <i class="pi pi-user"></i>
             <span>Profile</span>
           </button> -->
-        
         </div>
       </div>
       <app-profile />

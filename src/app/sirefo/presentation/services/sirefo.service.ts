@@ -10,6 +10,7 @@ import {
   AsfiRequestMapper,
   aprovedRequest,
   asfiEntities,
+  IRequestStatusItem,
 } from '../../infrastructure';
 
 @Injectable({
@@ -84,8 +85,14 @@ export class SirefoService {
     });
   }
 
-  consultarListaEstadoEnvio() {
-    return this.http.get(`${this.URL}/consultarListaEstadoEnvio`);
+  consultarListaEstadoEnvio(date?: Date) {
+    const params = new HttpParams({
+      fromObject: { ...(date && { date: date.toString() }) },
+    });
+    return this.http.get<IRequestStatusItem[]>(
+      `${this.URL}/consultarListaEstadoEnvio`,
+      { params }
+    );
   }
 
   uploadAsfiNote(file: File) {
